@@ -27,7 +27,11 @@ module.exports = (req, res) => {
 
   const db = loadDatabase();
   let body = req.body;
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch (e) {}
+  }
   if (!body && req.query) body = req.query;
+  body = body || {};
 
   try {
     // -------------------------------------------------------------

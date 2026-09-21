@@ -16,9 +16,15 @@
       ]
     },
     {
-      "source": "/api/(.*)",
+      "source": "/api/(quiz|search)",
       "headers": [
-        { "key": "Cache-Control", "value": "s-maxage=10, stale-while-revalidate=60" }
+        { "key": "Cache-Control", "value": "s-maxage=60, stale-while-revalidate=300" }
+      ]
+    },
+    {
+      "source": "/api/(auth|exam|history|collaborate)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }
       ]
     }
   ]

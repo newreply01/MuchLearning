@@ -18,7 +18,11 @@ module.exports = (req, res) => {
 
   // 取得請求主體 (兼容 serverless 與本機原生 Node)
   let body = req.body;
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch (e) {}
+  }
   if (!body && req.query) body = req.query;
+  body = body || {};
 
   const db = loadDatabase();
   const action = (body && body.action) || (req.query && req.query.action) || '';
