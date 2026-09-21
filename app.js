@@ -805,18 +805,21 @@
       }
     }
 
-    // 2. 清除 definition 內的所有附帶造句、典籍引文、出處書證
-    let cleanDef = def
-      .replace(/(?:造句|例句|如|例|§)\s*[:：].*$/g, '')
-      .replace(/\[例\].*$/g, '')
-      .replace(/〔例〕.*$/g, '')
-      .replace(/[\w\u4e00-\u9fa5]+[·˙・][\w\u4e00-\u9fa5]+[：:「].*$/g, '')
-      .replace(/^[\d\.\s、]+/g, '')
-      .trim();
+    // 2. 清除 definition 內的所有附帶造句、典籍引文、出處書證、別稱變體
+    let cleanDef = def || '';
+    cleanDef = cleanDef.split(/(?:語本|語出|語見|典出|書證|出處|亦作|或作|亦稱|參見|〔例|\[例|△)/)[0];
+    cleanDef = cleanDef.split(/(?:造句|例句|如|例|§)\s*[:：]/)[0];
+    cleanDef = cleanDef.replace(/(?:[，、；。]|\s+)?[\w\u4e00-\u9fa5〇○\d《》〈〉]{1,20}[·˙・].*$/g, '');
+    cleanDef = cleanDef.replace(/^[\d\.\s、]+/g, '').trim();
 
     // 若清理後只剩標點或過短，保留原前段
     if (!cleanDef && def) {
       cleanDef = def.split(/[。！？\n]/)[0].trim();
+    }
+
+    // 確保結尾具備完整標點
+    if (cleanDef && !/[。！？]$/.test(cleanDef)) {
+      cleanDef += '。';
     }
 
     // 3. 嚴格遮罩：釋義中若有目標詞，一律換成「【　　】」
