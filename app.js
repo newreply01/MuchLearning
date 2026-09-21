@@ -376,8 +376,17 @@
     // 1. 0 毫秒極速啟動：立刻使用啟動題庫渲染頁面與試卷
     processBank(STARTER_BANK, false);
 
-    // 2. 背景非同步載入 31,302 筆全量大題庫
-    loadFullBankBackground();
+    // 2. 雲端環境偵測與自動秒級同步 (Vercel Serverless 高速引擎)
+    if (window.location.protocol.startsWith('http')) {
+      if (elements.totalWordCount) {
+        elements.totalWordCount.textContent = '31,302 筆 (⚡ 雲端秒開)';
+      }
+      generateWorksheet();
+      initDictSearch();
+    } else {
+      // 本機 file:/// 離線模式兜底
+      loadFullBankBackground();
+    }
   }
 
   function loadFullBankBackground() {
@@ -1518,9 +1527,7 @@
   // ============================================================================
   // 核心功能 1: A4 練習券出卷產生引擎 (保證 100% 題數相符)
   // ============================================================================
-  function generateWorksheet() {
-    if (rawBank.length === 0) return;
-
+  async function generateWorksheet() {
     const targetCount = parseInt(elements.questionCountSelect.value, 10) || 10;
     const scope = elements.targetScopeSelect.value;
     const showZhuyin = elements.chkShowZhuyin.checked;
@@ -1529,10 +1536,31 @@
     elements.displayPaperSubtitle.textContent = elements.paperSubtitleInput.value || '';
     elements.displayMarks.textContent = `總題數：${targetCount} 題 (滿分 100 分，每題 ${Math.floor(100 / targetCount)} 分)`;
 
-    const collectedQuestions = [];
-
-    // 檢查是否有選定教科書版本 (康軒/南一/翰林)
     const press = elements.textbookPressSelect ? elements.textbookPressSelect.value : 'none';
+    const gradeSem = elements.textbookGradeSelect ? elements.textbookGradeSelect.value : '3_1';
+    const tbScope = elements.textbookScopeSelect ? elements.textbookScopeSelect.value : 'all';
+
+    // 🌟 雲端極速 Serverless 出題引擎 (抗高並發、秒級響應 ~3KB 精簡 JSON)
+    if (window.location.protocol.startsWith('http')) {
+      try {
+        const apiUrl = `/api/quiz?press=${encodeURIComponent(press)}&gradeSem=${encodeURIComponent(gradeSem)}&scope=${encodeURIComponent(tbScope)}&targetScope=${encodeURIComponent(scope)}&count=${targetCount}`;
+        const resp = await fetch(apiUrl);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.success && Array.isArray(data.questions) && data.questions.length > 0) {
+            renderPaperQuestions(data.questions, showZhuyin);
+            renderAnswerKey(data.questions);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('雲端 API 出題失敗，自動降級本機引擎：', err);
+      }
+    }
+
+    if (rawBank.length === 0) return;
+
+    const collectedQuestions = [];
     const isTextbookMode = press !== 'none';
     let textbookPool = [];
     let textbookInfo = null;
@@ -2165,7 +2193,7 @@
   // ============================================================================
   // 核心功能 2: 線上互動測驗系統 (支援 8 大題型)
   // ============================================================================
-  function startNewQuizSession(mode) {
+  async function startNewQuizSession(mode) {
     quizScore = 0;
     quizStreak = 0;
     currentQuizIndex = 0;
@@ -2173,6 +2201,24 @@
 
     currentQuizList = [];
     const count = 10;
+
+    // 🌟 優先使用雲端 Serverless API 出題
+    if (window.location.protocol.startsWith('http')) {
+      try {
+        const apiUrl = `/api/quiz?mode=${encodeURIComponent(mode)}&count=${count}`;
+        const resp = await fetch(apiUrl);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.success && Array.isArray(data.questions) && data.questions.length > 0) {
+            currentQuizList = data.questions;
+            renderCurrentQuizQuestion();
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('雲端 API 測驗抽題失敗，降級本機題庫：', err);
+      }
+    }
 
     let candidates = [];
     if (mode === 'zhuyin') {
@@ -2544,10 +2590,39 @@
     filterDictionary();
   }
 
-  function filterDictionary() {
+  let dictIsServerMode = false;
+
+  async function filterDictionary() {
     const keyword = elements.dictSearchInput.value.trim().toLowerCase();
     const type = elements.dictFilterType.value;
+    dictCurrentPage = 1;
 
+    // 🌟 優先使用雲端 Serverless /api/search 分頁高速檢索
+    if (window.location.protocol.startsWith('http')) {
+      try {
+        const searchUrl = `/api/search?q=${encodeURIComponent(keyword)}&type=${encodeURIComponent(type)}&page=1&limit=${DICT_PAGE_SIZE}`;
+        const resp = await fetch(searchUrl);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.success) {
+            dictIsServerMode = true;
+            elements.dictResultCount.textContent = (data.total || 0).toLocaleString();
+            elements.dictCardsList.innerHTML = '';
+            renderDictCardsList(data.items || []);
+            if ((data.items || []).length < data.total) {
+              elements.btnLoadMoreDict.style.display = 'inline-block';
+            } else {
+              elements.btnLoadMoreDict.style.display = 'none';
+            }
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('雲端字典搜尋失敗，降級本機搜尋：', err);
+      }
+    }
+
+    dictIsServerMode = false;
     dictFilteredList = rawBank.filter(item => {
       if (type !== 'all' && item.type !== type) return false;
       if (!keyword) return true;
@@ -2560,7 +2635,6 @@
     });
 
     elements.dictResultCount.textContent = dictFilteredList.length.toLocaleString();
-    dictCurrentPage = 1;
     renderDictCards();
   }
 
@@ -2569,12 +2643,8 @@
     appendDictCardsBatch();
   }
 
-  function appendDictCardsBatch() {
-    const start = (dictCurrentPage - 1) * DICT_PAGE_SIZE;
-    const end = start + DICT_PAGE_SIZE;
-    const batch = dictFilteredList.slice(start, end);
-
-    batch.forEach(item => {
+  function renderDictCardsList(items) {
+    items.forEach(item => {
       const card = document.createElement('div');
       card.className = 'dict-card';
 
@@ -2583,7 +2653,7 @@
       card.innerHTML = `
         <div class="dict-card-header">
           <span class="dict-word-title">${item.word || item.title}</span>
-          <span class="badge ${typeBadgeClass}">${item.category_name}</span>
+          <span class="badge ${typeBadgeClass}">${item.category_name || (item.type === 'idiom' ? '成語熟語' : '常用字詞')}</span>
         </div>
         ${item.zhuyin ? `<div class="dict-zhuyin">注音：${item.zhuyin}</div>` : ''}
         ${item.definition ? `<div class="dict-def"><b>釋義：</b>${item.definition}</div>` : ''}
@@ -2591,6 +2661,13 @@
       `;
       elements.dictCardsList.appendChild(card);
     });
+  }
+
+  function appendDictCardsBatch() {
+    const start = (dictCurrentPage - 1) * DICT_PAGE_SIZE;
+    const end = start + DICT_PAGE_SIZE;
+    const batch = dictFilteredList.slice(start, end);
+    renderDictCardsList(batch);
 
     if (end < dictFilteredList.length) {
       elements.btnLoadMoreDict.style.display = 'inline-block';
@@ -2599,8 +2676,31 @@
     }
   }
 
-  function loadMoreDictItems() {
+  async function loadMoreDictItems() {
     dictCurrentPage++;
+    if (dictIsServerMode) {
+      const keyword = elements.dictSearchInput.value.trim().toLowerCase();
+      const type = elements.dictFilterType.value;
+      try {
+        const searchUrl = `/api/search?q=${encodeURIComponent(keyword)}&type=${encodeURIComponent(type)}&page=${dictCurrentPage}&limit=${DICT_PAGE_SIZE}`;
+        const resp = await fetch(searchUrl);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.success && Array.isArray(data.items)) {
+            renderDictCardsList(data.items);
+            const loaded = dictCurrentPage * DICT_PAGE_SIZE;
+            if (loaded < data.total) {
+              elements.btnLoadMoreDict.style.display = 'inline-block';
+            } else {
+              elements.btnLoadMoreDict.style.display = 'none';
+            }
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn('雲端載入更多失敗：', e);
+      }
+    }
     appendDictCardsBatch();
   }
 
