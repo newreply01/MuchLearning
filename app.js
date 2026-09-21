@@ -785,16 +785,68 @@
   // 8 大題型建構器 (Question Builders)
   // ============================================================================
 
+  /**
+   * 深入清洗字詞釋義與例句，嚴格杜絕題目洩漏解答：
+   * 1. 提取隱藏在 definition 中的真實造句 (例如 "造句：故宮博物院典藏許多古代官家所藏的珍玩。")
+   * 2. 徹底濾除釋義中的造句、引文出處（如「紅樓夢˙第五十二回...」）、書證例句
+   * 3. 若目標字詞依然出現在釋義中，強制替換為掩碼「【　　】」，100% 保證題幹絕不出現答案
+   */
+  function sanitizeItemForQuestion(item) {
+    if (!item) return { cleanExample: '', cleanDef: '' };
+    const word = item.word || '';
+    let ex = item.example || '';
+    let def = item.definition || '';
+
+    // 1. 如果原始 example 未包含目標詞，嘗試從 definition 的「造句：」或「例：」中提取
+    if (!ex || !ex.includes(word)) {
+      const m = def.match(/(?:造句|例句|如|例|§)\s*[:：]\s*([^。！？\n\r]+[。！？]?)/);
+      if (m && m[1] && m[1].includes(word)) {
+        ex = m[1].trim();
+      }
+    }
+
+    // 2. 清除 definition 內的所有附帶造句、典籍引文、出處書證
+    let cleanDef = def
+      .replace(/(?:造句|例句|如|例|§)\s*[:：].*$/g, '')
+      .replace(/\[例\].*$/g, '')
+      .replace(/〔例〕.*$/g, '')
+      .replace(/[\w\u4e00-\u9fa5]+[·˙・][\w\u4e00-\u9fa5]+[：:「].*$/g, '')
+      .replace(/^[\d\.\s、]+/g, '')
+      .trim();
+
+    // 若清理後只剩標點或過短，保留原前段
+    if (!cleanDef && def) {
+      cleanDef = def.split(/[。！？\n]/)[0].trim();
+    }
+
+    // 3. 嚴格遮罩：釋義中若有目標詞，一律換成「【　　】」
+    if (word && cleanDef.includes(word)) {
+      cleanDef = cleanDef.replace(new RegExp(word, 'g'), '【　　】');
+    }
+
+    // 4. 清理例句中的「造句：」前綴
+    if (ex) {
+      ex = ex.replace(/^(?:造句|例句|例|如)\s*[:：]\s*/, '').trim();
+    }
+
+    return { cleanExample: ex, cleanDef };
+  }
+
   // 1. 克漏字選詞造句 (Cloze)
   function buildClozeQuestion(item) {
     if (!item || !item.word) return null;
-    let maskedSentence = item.example || '';
-    if (maskedSentence && maskedSentence.includes(item.word)) {
-      maskedSentence = maskedSentence.replace(item.word, '【　　　　】');
-    } else if (maskedSentence) {
-      maskedSentence = `「${maskedSentence}」文句中最適當填入的詞語是【　　　　】。`;
+    const { cleanExample, cleanDef } = sanitizeItemForQuestion(item);
+    let maskedSentence = '';
+
+    if (cleanExample && cleanExample.includes(item.word)) {
+      maskedSentence = cleanExample.replace(item.word, '【　　　　】');
+      if (!maskedSentence.startsWith('「') && !maskedSentence.includes('文句')) {
+        maskedSentence = `「${maskedSentence}」文句中最適當填入的詞語是【　　　　】。`;
+      }
+    } else if (cleanDef) {
+      maskedSentence = `下列詞語中，意思為「${cleanDef}」的是【　　　　】。`;
     } else {
-      maskedSentence = `下列詞語中，意思為「${item.definition || '……'}」的是【　　　　】。`;
+      maskedSentence = `下列文句中，最適當填入的詞語是【　　　　】。`;
     }
 
     const pool = (item.type === 'idiom') ? bankByType.idiom : bankByType.vocabulary;
@@ -902,13 +954,19 @@
   // 4. 成語生活情境素養題 (Situational Idiom)
   function buildSituationalQuestion(item) {
     let idiomItem = (item && item.type === 'idiom') ? item : getRandomSample(bankByType.idiom, 1)[0];
-    if (!idiomItem || !idiomItem.definition) return null;
+    if (!idiomItem) return null;
 
+    const { cleanExample, cleanDef } = sanitizeItemForQuestion(idiomItem);
     let scenario = '';
-    if (idiomItem.example && idiomItem.example.length > 10) {
-      scenario = `面對「${idiomItem.example}」這樣的生活情境，其所展現的處事態度或情狀，最適合用下列哪一個成語來形容概括？`;
+
+    if (cleanExample && cleanExample.includes(idiomItem.word)) {
+      // 必須將成語挖空為【　　　　】，絕不能把成語原詞留在情境中！
+      const maskedEx = cleanExample.replace(idiomItem.word, '【　　　　】');
+      scenario = `面對「${maskedEx}」這樣的生活情境，空格中最適合填入下列哪一個成語？`;
+    } else if (cleanDef) {
+      scenario = `如果有人想表達「${cleanDef}」的意思，最恰當的成語是：`;
     } else {
-      scenario = `如果有人想表達「${idiomItem.definition}」的意思，並勉勵大家在團隊合作或日常處事中實踐，最恰當的成語是：`;
+      scenario = `請選出最適當的成語：`;
     }
 
     const distractors = getRandomSample(bankByType.idiom.filter(i => i.word !== idiomItem.word), 3).map(i => i.word);
@@ -2180,7 +2238,6 @@
             ${zhuyinHtml}
           </div>
           <div class="q-body">${q.promptSentence}</div>
-          ${q.definition ? `<div class="q-hint-text">💡 提示：${q.definition}</div>` : ''}
           ${renderOptionsHtml(q.options, letters, q.quizType)}
         `;
       }
@@ -2510,12 +2567,11 @@
 
       elements.quizQuestionPrompt.innerHTML = q.promptSentence || q.example;
       if (q.quizType === 'typo') {
-        elements.quizPromptHint.innerHTML = `💡 <b>解題提示：</b>仔細觀察句中畫底線處的詞語，找出哪一個字形是錯別字，並從選項中選出改正後的正確字。`;
+        elements.quizPromptHint.style.display = 'block';
+        elements.quizPromptHint.innerHTML = `💡 請仔細觀察句中畫底線處的詞語，選出改正後的正確字。`;
       } else {
-        elements.quizPromptHint.innerHTML = `
-          <strong>💡 導引提示：</strong>${q.definition || '請依語法與語意邏輯選出最佳選項'}
-          ${q.zhuyin ? ` ｜ <strong>注音：</strong>${formatZhuyin(q.zhuyin)}` : ''}
-        `;
+        elements.quizPromptHint.innerHTML = '';
+        elements.quizPromptHint.style.display = 'none';
       }
 
       elements.quizOptionsContainer.innerHTML = '';

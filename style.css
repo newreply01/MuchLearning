@@ -1702,4 +1702,10 @@ body.theme-dark .loader-sub {
   gap: 6px;
 }
 
+/* 徹底隱藏題目內之直接提示，避免直接洩漏解答 */
+.q-hint-text {
+  display: none !important;
+}
+
+
 
