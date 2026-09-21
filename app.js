@@ -287,7 +287,6 @@
     targetScopeSelect: document.getElementById('targetScopeSelect'),
     questionCountSelect: document.getElementById('questionCountSelect'),
     layoutSelect: document.getElementById('layoutSelect'),
-    chkShowZhuyin: document.getElementById('chkShowZhuyin'),
     chkShowHeaderBox: document.getElementById('chkShowHeaderBox'),
     chkIncludeAnswerKey: document.getElementById('chkIncludeAnswerKey'),
     chkShowMimicPattern: document.getElementById('chkShowMimicPattern'),
@@ -691,7 +690,9 @@
     elements.targetScopeSelect.addEventListener('change', generateWorksheet);
     elements.questionCountSelect.addEventListener('change', generateWorksheet);
     elements.layoutSelect.addEventListener('change', updateLayoutMode);
-    elements.chkShowZhuyin.addEventListener('change', generateWorksheet);
+    if (elements.chkShowZhuyin) {
+      elements.chkShowZhuyin.addEventListener('change', generateWorksheet);
+    }
     elements.chkShowHeaderBox.addEventListener('change', () => {
       elements.studentInfoBox.style.display = elements.chkShowHeaderBox.checked ? 'flex' : 'none';
     });
@@ -1759,7 +1760,6 @@
   async function generateWorksheet() {
     const targetCount = parseInt(elements.questionCountSelect.value, 10) || 10;
     const scope = elements.targetScopeSelect.value;
-    const showZhuyin = elements.chkShowZhuyin.checked;
 
     elements.displayPaperTitle.textContent = elements.paperTitleInput.value || '國語文造句與成語練習單';
     elements.displayPaperSubtitle.textContent = elements.paperSubtitleInput.value || '';
@@ -1777,7 +1777,7 @@
         if (resp.ok) {
           const data = await resp.json();
           if (data.success && Array.isArray(data.questions) && data.questions.length > 0) {
-            renderPaperQuestions(data.questions, showZhuyin);
+            renderPaperQuestions(data.questions);
             renderAnswerKey(data.questions);
             return;
           }
@@ -2119,7 +2119,7 @@
 
     const finalQuestions = collectedQuestions.slice(0, targetCount);
 
-    renderPaperQuestions(finalQuestions, showZhuyin);
+    renderPaperQuestions(finalQuestions);
     renderAnswerKey(finalQuestions);
   }
 
@@ -2144,7 +2144,7 @@
     `;
   }
 
-  function renderPaperQuestions(questions, showZhuyin) {
+  function renderPaperQuestions(questions) {
     lastGeneratedPaperQuestions = questions || [];
     elements.printableQuestionsList.innerHTML = '';
     const letters = ['A', 'B', 'C', 'D'];
@@ -2154,7 +2154,7 @@
       const qDiv = document.createElement('div');
       qDiv.className = 'question-item';
 
-      const zhuyinHtml = (showZhuyin && q.zhuyin) ? `<span class="q-zhuyin-tag">(${formatZhuyin(q.zhuyin)})</span>` : '';
+      const zhuyinHtml = '';
 
       if (q.quizType === 'zhuyin') {
         // 國字注音辨別題
