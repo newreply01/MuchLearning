@@ -274,6 +274,13 @@
     btnThemeToggle: document.getElementById('btnThemeToggle'),
     totalWordCount: document.getElementById('totalWordCount'),
 
+    // 教科書版本控制器
+    textbookPressSelect: document.getElementById('textbookPressSelect'),
+    textbookGradeGroup: document.getElementById('textbookGradeGroup'),
+    textbookGradeSelect: document.getElementById('textbookGradeSelect'),
+    textbookScopeGroup: document.getElementById('textbookScopeGroup'),
+    textbookScopeSelect: document.getElementById('textbookScopeSelect'),
+
     // A4 試卷控制器
     paperTitleInput: document.getElementById('paperTitleInput'),
     paperSubtitleInput: document.getElementById('paperSubtitleInput'),
@@ -428,8 +435,56 @@
       sentence: rawBank.filter(i => i.type === 'sentence'),
       ellipsis: rawBank.filter(i => i.type === 'ellipsis'),
       withSynonyms: rawBank.filter(i => i.synonyms && i.synonyms.trim().length > 0),
-      withZhuyin: rawBank.filter(i => i.zhuyin && i.zhuyin.trim().length > 0)
+      withZhuyin: rawBank.filter(i => i.zhuyin && i.zhuyin.trim().length > 0),
+      idiomLow: [],
+      idiomMid: [],
+      idiomHigh: []
     };
+
+    // 整合教育部官方 150 則國小低中高年級常用成語
+    if (window.IDIOM_150_LIST && Array.isArray(window.IDIOM_150_LIST)) {
+      const rawBankWordMap = new Map();
+      rawBank.forEach(item => {
+        if (item.word) rawBankWordMap.set(item.word, item);
+      });
+
+      window.IDIOM_150_LIST.forEach(item => {
+        const matched = rawBankWordMap.get(item.word);
+        const enrichedItem = matched ? {
+          ...matched,
+          level: item.level,
+          levelText: item.levelText,
+          zhuyin: item.zhuyin || matched.zhuyin
+        } : {
+          id: `idiom-150-${item.word}`,
+          type: 'idiom',
+          category_name: `教育部成語(${item.levelText})`,
+          word: item.word,
+          title: item.word,
+          zhuyin: item.zhuyin,
+          definition: `教育部國小官方推薦常用成語（${item.levelText}）。`,
+          example: `平日寫作與說話時，若能適切引用「${item.word}」，能讓文意更加生動生輝。`,
+          synonyms: '',
+          antonyms: '',
+          template: item.word,
+          pattern: item.word,
+          difficulty: (item.level === 'low') ? 'elementary' : 'junior_high',
+          level: item.level,
+          levelText: item.levelText
+        };
+
+        if (item.level === 'low') bankByType.idiomLow.push(enrichedItem);
+        else if (item.level === 'mid') bankByType.idiomMid.push(enrichedItem);
+        else if (item.level === 'high') bankByType.idiomHigh.push(enrichedItem);
+
+        // 若題庫尚未收錄，無縫注入 rawBank 與 bankByType.idiom
+        if (!matched) {
+          rawBank.push(enrichedItem);
+          bankByType.idiom.push(enrichedItem);
+          if (enrichedItem.zhuyin) bankByType.withZhuyin.push(enrichedItem);
+        }
+      });
+    }
 
     if (elements.totalWordCount) {
       elements.totalWordCount.textContent = rawBank.length.toLocaleString();
@@ -483,6 +538,30 @@
 
     elements.btnGeneratePaper.addEventListener('click', generateWorksheet);
     elements.btnPrintPaper.addEventListener('click', () => window.print());
+
+    // 教科書版本聯動事件
+    if (elements.textbookPressSelect) {
+      elements.textbookPressSelect.addEventListener('change', () => {
+        const isTextbook = elements.textbookPressSelect.value !== 'none';
+        if (elements.textbookGradeGroup) elements.textbookGradeGroup.style.display = isTextbook ? 'flex' : 'none';
+        if (elements.textbookScopeGroup) elements.textbookScopeGroup.style.display = isTextbook ? 'flex' : 'none';
+        updateTextbookHeaderInputs();
+        generateWorksheet();
+      });
+    }
+    if (elements.textbookGradeSelect) {
+      elements.textbookGradeSelect.addEventListener('change', () => {
+        updateTextbookHeaderInputs();
+        generateWorksheet();
+      });
+    }
+    if (elements.textbookScopeSelect) {
+      elements.textbookScopeSelect.addEventListener('change', () => {
+        updateTextbookHeaderInputs();
+        generateWorksheet();
+      });
+    }
+
     elements.paperTitleInput.addEventListener('input', () => {
       elements.displayPaperTitle.textContent = elements.paperTitleInput.value || '國語文練習單';
     });
@@ -1363,6 +1442,80 @@
   }
 
   // ============================================================================
+  // 教科書最新年度課綱查詢與標題智慧同步 (Kang Hsuan, Nan Yi, Han Lin)
+  // ============================================================================
+  function getTextbookActiveLessons(press, gradeSem, scope) {
+    if (!window.TEXTBOOK_DATA || !window.TEXTBOOK_DATA.curriculum) return null;
+    const parts = (gradeSem || '3_1').split('_');
+    const grade = parts[0] || '3';
+    const sem = parts[1] || '1';
+
+    const pressData = window.TEXTBOOK_DATA.curriculum[press];
+    if (!pressData || !pressData[grade] || !pressData[grade][sem]) return null;
+
+    const gradeData = pressData[grade][sem];
+    const latestYear = gradeData.latestYear || 115;
+    let lessons = gradeData.lessons || [];
+
+    if (scope === '1-4') {
+      lessons = lessons.filter(l => l.lessonNum >= 1 && l.lessonNum <= 4);
+    } else if (scope === '5-8') {
+      lessons = lessons.filter(l => l.lessonNum >= 5 && l.lessonNum <= 8);
+    } else if (scope === '9-12') {
+      lessons = lessons.filter(l => l.lessonNum >= 9 && l.lessonNum <= 12);
+    }
+
+    return {
+      press,
+      grade,
+      semester: sem,
+      latestYear,
+      lessons
+    };
+  }
+
+  function updateTextbookHeaderInputs() {
+    if (!elements.textbookPressSelect) return;
+    const press = elements.textbookPressSelect.value;
+    if (press === 'none') {
+      elements.paperTitleInput.value = '國語文造句、成語挑戰與素養練習單';
+      elements.paperSubtitleInput.value = '詞彙理解・錯字訂正・重組造句・國字注音・素養命題評量';
+      elements.displayPaperTitle.textContent = elements.paperTitleInput.value;
+      elements.displayPaperSubtitle.textContent = elements.paperSubtitleInput.value;
+      elements.displayAnswerSubtitle.textContent = '請由家長或教師進行批改';
+      return;
+    }
+
+    const gradeSem = elements.textbookGradeSelect ? elements.textbookGradeSelect.value : '3_1';
+    const parts = gradeSem.split('_');
+    const grade = parts[0] || '3';
+    const sem = parts[1] || '1';
+    const scope = elements.textbookScopeSelect ? elements.textbookScopeSelect.value : 'all';
+
+    const numToChinese = { '1': '一', '2': '二', '3': '三', '4': '四', '5': '五', '6': '六' };
+    const gradeText = `${numToChinese[grade] || grade}年級${sem === '1' ? '上' : '下'}學期`;
+
+    const scopeNames = {
+      'all': '全冊課文總複習',
+      '1-4': '第 1～4 課（第一次段考）',
+      '5-8': '第 5～8 課（第二次段考）',
+      '9-12': '第 9～12 課（期末評量）'
+    };
+    const scopeText = scopeNames[scope] || '全冊課文';
+
+    let latestYear = 115;
+    if (window.TEXTBOOK_DATA && window.TEXTBOOK_DATA.curriculum && window.TEXTBOOK_DATA.curriculum[press] && window.TEXTBOOK_DATA.curriculum[press][grade] && window.TEXTBOOK_DATA.curriculum[press][grade][sem]) {
+      latestYear = window.TEXTBOOK_DATA.curriculum[press][grade][sem].latestYear || 115;
+    }
+
+    elements.paperTitleInput.value = `${press}國語 ${gradeText} 課堂學習評量卷`;
+    elements.paperSubtitleInput.value = `【最新 ${latestYear} 學年度課綱・${scopeText}】生字生詞、成語挑戰與素養評量`;
+    elements.displayPaperTitle.textContent = elements.paperTitleInput.value;
+    elements.displayPaperSubtitle.textContent = elements.paperSubtitleInput.value;
+    elements.displayAnswerSubtitle.textContent = `(${elements.paperSubtitleInput.value})`;
+  }
+
+  // ============================================================================
   // 核心功能 1: A4 練習券出卷產生引擎 (保證 100% 題數相符)
   // ============================================================================
   function generateWorksheet() {
@@ -1378,125 +1531,330 @@
 
     const collectedQuestions = [];
 
+    // 檢查是否有選定教科書版本 (康軒/南一/翰林)
+    const press = elements.textbookPressSelect ? elements.textbookPressSelect.value : 'none';
+    const isTextbookMode = press !== 'none';
+    let textbookPool = [];
+    let textbookInfo = null;
+
+    if (isTextbookMode) {
+      const gradeSem = elements.textbookGradeSelect ? elements.textbookGradeSelect.value : '3_1';
+      const tbScope = elements.textbookScopeSelect ? elements.textbookScopeSelect.value : 'all';
+      textbookInfo = getTextbookActiveLessons(press, gradeSem, tbScope);
+
+      if (textbookInfo && textbookInfo.lessons && textbookInfo.lessons.length > 0) {
+        const rawMap = new Map();
+        rawBank.forEach(item => {
+          if (item.word) rawMap.set(item.word, item);
+        });
+
+        textbookInfo.lessons.forEach(lesson => {
+          (lesson.words || []).forEach(wObj => {
+            const matched = rawMap.get(wObj.word);
+            if (matched) {
+              textbookPool.push({
+                ...matched,
+                lessonNum: lesson.lessonNum,
+                lessonTitle: lesson.lessonTitle,
+                academicYear: lesson.academicYear,
+                press: press
+              });
+            } else {
+              // 課本原生詞彙轉換
+              let ex = '';
+              let def = wObj.desc || '';
+              const exMatch = def.match(/\[例\]([^。！？\n\r]+[。！？]?)/);
+              if (exMatch) {
+                ex = exMatch[1].trim();
+              } else {
+                const ruMatch = def.match(/如：「([^」]+)」/);
+                if (ruMatch) {
+                  ex = `我們在日常生活中常說「${ruMatch[1]}」。`;
+                } else {
+                  ex = `我們要認真體會並正確掌握「${wObj.word}」的用法。`;
+                }
+              }
+              const cleanDef = def.replace(/\[例\].*$/, '').replace(/如：「.*$/, '').trim();
+              textbookPool.push({
+                id: `tb-${lesson.academicYear}-${wObj.word}`,
+                type: 'vocabulary',
+                category_name: `${press} 第${lesson.lessonNum}課`,
+                word: wObj.word,
+                title: wObj.word,
+                zhuyin: '',
+                definition: cleanDef || '課文生字語詞。',
+                example: ex,
+                synonyms: '',
+                antonyms: '',
+                template: wObj.word,
+                pattern: wObj.word,
+                difficulty: 'elementary',
+                lessonNum: lesson.lessonNum,
+                lessonTitle: lesson.lessonTitle,
+                academicYear: lesson.academicYear,
+                press: press
+              });
+            }
+          });
+        });
+      }
+    }
+
     // 依題型專題進行抽題
-    if (scope === 'zhuyin') {
-      const candidates = shuffleArray(bankByType.withZhuyin);
-      for (let c of candidates) {
-        const q = buildZhuyinQuestion(c);
-        if (q) collectedQuestions.push(q);
-        if (collectedQuestions.length >= targetCount) break;
-      }
-    } else if (scope === 'synonym') {
-      const candidates = shuffleArray(bankByType.withSynonyms);
-      for (let c of candidates) {
-        const q = buildSynonymQuestion(c);
-        if (q) collectedQuestions.push(q);
-        if (collectedQuestions.length >= targetCount) break;
-      }
-    } else if (scope === 'situational') {
-      const candidates = shuffleArray(bankByType.idiom);
-      for (let c of candidates) {
-        const q = buildSituationalQuestion(c);
-        if (q) collectedQuestions.push(q);
-        if (collectedQuestions.length >= targetCount) break;
-      }
-    } else if (scope === 'conjunction') {
-      const candidates = shuffleArray(bankByType.ellipsis);
-      for (let c of candidates) {
-        const q = buildConjunctionQuestion(c);
-        if (q) collectedQuestions.push(q);
-        if (collectedQuestions.length >= targetCount) break;
-      }
-    } else if (scope === 'typo') {
-      const candidates = shuffleArray([...bankByType.idiom, ...bankByType.vocabulary]);
-      for (let c of candidates) {
-        const q = buildTypoQuestion(c);
-        if (q) collectedQuestions.push(q);
-        if (collectedQuestions.length >= targetCount) break;
-      }
-    } else if (scope === 'unscramble') {
-      const candidates = shuffleArray([...bankByType.idiom, ...bankByType.vocabulary]);
-      for (let c of candidates) {
-        const q = buildUnscrambleQuestion(c);
-        if (q) collectedQuestions.push(q);
-        if (collectedQuestions.length >= targetCount) break;
-      }
-    } else if (scope === 'sentence') {
-      const candidates = shuffleArray(bankByType.sentence);
-      for (let c of candidates) {
-        const q = buildSentenceMimicQuestion(c);
-        if (q) collectedQuestions.push(q);
-        if (collectedQuestions.length >= targetCount) break;
-      }
-    } else if (scope === 'ellipsis') {
-      const candidates = shuffleArray(bankByType.ellipsis);
-      for (let c of candidates) {
-        const q = buildConjunctionQuestion(c);
-        if (q) collectedQuestions.push(q);
-        if (collectedQuestions.length >= targetCount) break;
-      }
-    } else if (scope === 'idiom') {
-      const candidates = shuffleArray(bankByType.idiom);
-      for (let c of candidates) {
-        const r = Math.random();
-        let q = null;
-        if (r < 0.4) q = buildClozeQuestion(c);
-        else if (r < 0.7) q = buildSituationalQuestion(c);
-        else q = buildTypoQuestion(c);
-        if (q) collectedQuestions.push(q);
-        if (collectedQuestions.length >= targetCount) break;
-      }
-    } else if (scope === 'elementary') {
-      const candidates = shuffleArray([...bankByType.vocabulary, ...bankByType.sentence]);
-      for (let c of candidates) {
-        let q = null;
-        if (c.type === 'sentence') q = buildSentenceMimicQuestion(c);
-        else if (Math.random() < 0.5) q = buildZhuyinQuestion(c);
-        else q = buildClozeQuestion(c);
-        if (q) collectedQuestions.push(q);
-        if (collectedQuestions.length >= targetCount) break;
-      }
-    } else if (scope === 'junior_high') {
-      const candidates = shuffleArray([...bankByType.idiom, ...bankByType.ellipsis]);
-      for (let c of candidates) {
-        let q = null;
-        if (c.type === 'ellipsis') q = buildConjunctionQuestion(c);
-        else if (Math.random() < 0.5) q = buildSituationalQuestion(c);
-        else q = buildTypoQuestion(c);
-        if (q) collectedQuestions.push(q);
-        if (collectedQuestions.length >= targetCount) break;
+    if (isTextbookMode && textbookPool.length > 0) {
+      const grade = textbookInfo ? textbookInfo.grade : '3';
+      let gradeIdioms = bankByType.idiomMid;
+      if (grade === '1' || grade === '2') gradeIdioms = bankByType.idiomLow;
+      else if (grade === '5' || grade === '6') gradeIdioms = bankByType.idiomHigh;
+
+      if (scope === 'zhuyin') {
+        const candidates = shuffleArray(textbookPool.filter(i => i.zhuyin || rawBank.find(r => r.word === i.word && r.zhuyin)));
+        for (let c of candidates) {
+          if (!c.zhuyin) {
+            const r = rawBank.find(item => item.word === c.word && item.zhuyin);
+            if (r) c.zhuyin = r.zhuyin;
+          }
+          const q = buildZhuyinQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else if (scope === 'typo') {
+        const candidates = shuffleArray(textbookPool);
+        for (let c of candidates) {
+          const q = buildTypoQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else if (scope === 'unscramble') {
+        const candidates = shuffleArray(textbookPool.filter(i => i.example && i.example.length >= 10));
+        for (let c of candidates) {
+          const q = buildUnscrambleQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else if (scope === 'synonym') {
+        const candidates = shuffleArray(textbookPool.filter(i => i.synonyms));
+        for (let c of candidates) {
+          const q = buildSynonymQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else if (scope === 'situational' || scope === 'idiom') {
+        const candidates = shuffleArray(gradeIdioms && gradeIdioms.length ? gradeIdioms : bankByType.idiom);
+        for (let c of candidates) {
+          const q = (scope === 'situational') ? buildSituationalQuestion(c) : buildClozeQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else if (scope === 'idiom_low') {
+        const candidates = shuffleArray(bankByType.idiomLow && bankByType.idiomLow.length ? bankByType.idiomLow : bankByType.idiom);
+        for (let c of candidates) {
+          const q = buildClozeQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else if (scope === 'idiom_mid') {
+        const candidates = shuffleArray(bankByType.idiomMid && bankByType.idiomMid.length ? bankByType.idiomMid : bankByType.idiom);
+        for (let c of candidates) {
+          const q = buildClozeQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else if (scope === 'idiom_high') {
+        const candidates = shuffleArray(bankByType.idiomHigh && bankByType.idiomHigh.length ? bankByType.idiomHigh : bankByType.idiom);
+        for (let c of candidates) {
+          const q = buildClozeQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else {
+        // 教科書綜合題型：按比例分配課文生字注音、錯字、克漏字與年級常用成語
+        const tbShuffled = shuffleArray(textbookPool);
+        const idiomShuffled = shuffleArray(gradeIdioms && gradeIdioms.length ? gradeIdioms : bankByType.idiom);
+        let iIdx = 0;
+        let tIdx = 0;
+
+        while (collectedQuestions.length < targetCount && (tIdx < tbShuffled.length || iIdx < idiomShuffled.length)) {
+          const r = collectedQuestions.length % 5;
+          let q = null;
+          if (r === 0 && tIdx < tbShuffled.length) {
+            q = buildClozeQuestion(tbShuffled[tIdx++]);
+          } else if (r === 1 && tIdx < tbShuffled.length) {
+            const cand = tbShuffled[tIdx++];
+            if (!cand.zhuyin) {
+              const rb = rawBank.find(item => item.word === cand.word && item.zhuyin);
+              if (rb) cand.zhuyin = rb.zhuyin;
+            }
+            q = buildZhuyinQuestion(cand) || buildClozeQuestion(cand);
+          } else if (r === 2 && tIdx < tbShuffled.length) {
+            q = buildTypoQuestion(tbShuffled[tIdx++]);
+          } else if (r === 3 && iIdx < idiomShuffled.length) {
+            const idiomItem = idiomShuffled[iIdx++];
+            q = (Math.random() < 0.5) ? buildSituationalQuestion(idiomItem) : buildClozeQuestion(idiomItem);
+          } else if (r === 4 && tIdx < tbShuffled.length) {
+            q = buildUnscrambleQuestion(tbShuffled[tIdx++]) || buildClozeQuestion(tbShuffled[tIdx++]);
+          }
+
+          if (q) collectedQuestions.push(q);
+        }
       }
     } else {
-      // 綜合全題型：按比例分配 8 大題型
-      const builders = [
-        buildClozeQuestion,
-        buildZhuyinQuestion,
-        buildSynonymQuestion,
-        buildSituationalQuestion,
-        buildConjunctionQuestion,
-        buildTypoQuestion,
-        buildUnscrambleQuestion,
-        buildSentenceMimicQuestion
-      ];
-
-      const poolShuffled = shuffleArray(rawBank);
-      let bIdx = 0;
-      for (let item of poolShuffled) {
-        const builder = builders[bIdx % builders.length];
-        const q = builder(item);
-        if (q) {
-          collectedQuestions.push(q);
-          bIdx++;
+      // 原有非教科書全量題庫模式
+      if (scope === 'zhuyin') {
+        const candidates = shuffleArray(bankByType.withZhuyin);
+        for (let c of candidates) {
+          const q = buildZhuyinQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
         }
-        if (collectedQuestions.length >= targetCount) break;
+      } else if (scope === 'synonym') {
+        const candidates = shuffleArray(bankByType.withSynonyms);
+        for (let c of candidates) {
+          const q = buildSynonymQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else if (scope === 'situational') {
+        const candidates = shuffleArray(bankByType.idiom);
+        for (let c of candidates) {
+          const q = buildSituationalQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else if (scope === 'conjunction') {
+        const candidates = shuffleArray(bankByType.ellipsis);
+        for (let c of candidates) {
+          const q = buildConjunctionQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else if (scope === 'typo') {
+        const candidates = shuffleArray([...bankByType.idiom, ...bankByType.vocabulary]);
+        for (let c of candidates) {
+          const q = buildTypoQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else if (scope === 'unscramble') {
+        const candidates = shuffleArray([...bankByType.idiom, ...bankByType.vocabulary]);
+        for (let c of candidates) {
+          const q = buildUnscrambleQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else if (scope === 'sentence') {
+        const candidates = shuffleArray(bankByType.sentence);
+        for (let c of candidates) {
+          const q = buildSentenceMimicQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else if (scope === 'ellipsis') {
+        const candidates = shuffleArray(bankByType.ellipsis);
+        for (let c of candidates) {
+          const q = buildConjunctionQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else if (scope === 'idiom') {
+        const candidates = shuffleArray(bankByType.idiom);
+        for (let c of candidates) {
+          const r = Math.random();
+          let q = null;
+          if (r < 0.4) q = buildClozeQuestion(c);
+          else if (r < 0.7) q = buildSituationalQuestion(c);
+          else q = buildTypoQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else if (scope === 'idiom_low') {
+        const candidates = shuffleArray(bankByType.idiomLow && bankByType.idiomLow.length ? bankByType.idiomLow : bankByType.idiom);
+        for (let c of candidates) {
+          const r = Math.random();
+          let q = null;
+          if (r < 0.4) q = buildClozeQuestion(c);
+          else if (r < 0.7) q = buildSituationalQuestion(c);
+          else q = buildTypoQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else if (scope === 'idiom_mid') {
+        const candidates = shuffleArray(bankByType.idiomMid && bankByType.idiomMid.length ? bankByType.idiomMid : bankByType.idiom);
+        for (let c of candidates) {
+          const r = Math.random();
+          let q = null;
+          if (r < 0.4) q = buildClozeQuestion(c);
+          else if (r < 0.7) q = buildSituationalQuestion(c);
+          else q = buildTypoQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else if (scope === 'idiom_high') {
+        const candidates = shuffleArray(bankByType.idiomHigh && bankByType.idiomHigh.length ? bankByType.idiomHigh : bankByType.idiom);
+        for (let c of candidates) {
+          const r = Math.random();
+          let q = null;
+          if (r < 0.4) q = buildClozeQuestion(c);
+          else if (r < 0.7) q = buildSituationalQuestion(c);
+          else q = buildTypoQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else if (scope === 'elementary') {
+        const candidates = shuffleArray([...bankByType.vocabulary, ...bankByType.sentence]);
+        for (let c of candidates) {
+          let q = null;
+          if (c.type === 'sentence') q = buildSentenceMimicQuestion(c);
+          else if (Math.random() < 0.5) q = buildZhuyinQuestion(c);
+          else q = buildClozeQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else if (scope === 'junior_high') {
+        const candidates = shuffleArray([...bankByType.idiom, ...bankByType.ellipsis]);
+        for (let c of candidates) {
+          let q = null;
+          if (c.type === 'ellipsis') q = buildConjunctionQuestion(c);
+          else if (Math.random() < 0.5) q = buildSituationalQuestion(c);
+          else q = buildTypoQuestion(c);
+          if (q) collectedQuestions.push(q);
+          if (collectedQuestions.length >= targetCount) break;
+        }
+      } else {
+        // 綜合全題型：按比例分配 8 大題型
+        const builders = [
+          buildClozeQuestion,
+          buildZhuyinQuestion,
+          buildSynonymQuestion,
+          buildSituationalQuestion,
+          buildConjunctionQuestion,
+          buildTypoQuestion,
+          buildUnscrambleQuestion,
+          buildSentenceMimicQuestion
+        ];
+
+        const poolShuffled = shuffleArray(rawBank);
+        let bIdx = 0;
+        for (let item of poolShuffled) {
+          const builder = builders[bIdx % builders.length];
+          const q = builder(item);
+          if (q) {
+            collectedQuestions.push(q);
+            bIdx++;
+          }
+          if (collectedQuestions.length >= targetCount) break;
+        }
       }
     }
 
     // 🌟 嚴格保證迴圈：若因特殊篩選使題目數不足 targetCount，立刻無縫自動補滿！
     let fallbackIdx = 0;
-    const fallbackShuffled = shuffleArray(rawBank);
+    const fallbackShuffled = (isTextbookMode && textbookPool.length > 0)
+      ? shuffleArray(textbookPool)
+      : shuffleArray(rawBank);
+
     while (collectedQuestions.length < targetCount) {
-      const item = fallbackShuffled[fallbackIdx % fallbackShuffled.length];
+      const item = fallbackShuffled[fallbackIdx % fallbackShuffled.length] || rawBank[fallbackIdx % rawBank.length];
       fallbackIdx++;
       const q = buildClozeQuestion(item);
       if (q) collectedQuestions.push(q);
@@ -1863,6 +2221,39 @@
       candidates = shuffleArray(bankByType.sentence);
       for (let c of candidates) {
         const q = buildSentenceMimicQuestion(c);
+        if (q) currentQuizList.push(q);
+        if (currentQuizList.length >= count) break;
+      }
+    } else if (mode === 'idiom_low') {
+      candidates = shuffleArray(bankByType.idiomLow && bankByType.idiomLow.length ? bankByType.idiomLow : bankByType.idiom);
+      for (let c of candidates) {
+        const r = Math.random();
+        let q = null;
+        if (r < 0.4) q = buildClozeQuestion(c);
+        else if (r < 0.7) q = buildSituationalQuestion(c);
+        else q = buildTypoQuestion(c);
+        if (q) currentQuizList.push(q);
+        if (currentQuizList.length >= count) break;
+      }
+    } else if (mode === 'idiom_mid') {
+      candidates = shuffleArray(bankByType.idiomMid && bankByType.idiomMid.length ? bankByType.idiomMid : bankByType.idiom);
+      for (let c of candidates) {
+        const r = Math.random();
+        let q = null;
+        if (r < 0.4) q = buildClozeQuestion(c);
+        else if (r < 0.7) q = buildSituationalQuestion(c);
+        else q = buildTypoQuestion(c);
+        if (q) currentQuizList.push(q);
+        if (currentQuizList.length >= count) break;
+      }
+    } else if (mode === 'idiom_high') {
+      candidates = shuffleArray(bankByType.idiomHigh && bankByType.idiomHigh.length ? bankByType.idiomHigh : bankByType.idiom);
+      for (let c of candidates) {
+        const r = Math.random();
+        let q = null;
+        if (r < 0.4) q = buildClozeQuestion(c);
+        else if (r < 0.7) q = buildSituationalQuestion(c);
+        else q = buildTypoQuestion(c);
         if (q) currentQuizList.push(q);
         if (currentQuizList.length >= count) break;
       }

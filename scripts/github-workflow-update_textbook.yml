@@ -1,0 +1,41 @@
+name: Auto Update Textbook & Idioms
+
+on:
+  schedule:
+    # 每月 1 號 02:00 UTC (台灣時間 10:00) 自動檢查並更新教育部最新學期資料
+    - cron: '0 2 1 * *'
+  workflow_dispatch:
+    # 支援 GitHub 網頁 Actions 介面手動隨時一鍵觸發更新
+
+permissions:
+  contents: write
+
+jobs:
+  update-data:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Textbook & Idiom Scraper
+        shell: powershell
+        run: |
+          powershell -ExecutionPolicy Bypass -File scripts\update_textbook.ps1
+
+      - name: Check for Changes and Commit
+        shell: powershell
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action [Textbook Updater]"
+          
+          $status = git status --porcelain
+          if ($status) {
+            Write-Host "Detected changes in dataset, committing..."
+            git add data/textbook_data.js data/idiom_list_150.js
+            $date = (Get-Date).ToString("yyyy-MM-dd")
+            git commit -m "chore(data): auto-update textbook words and idioms ($date)"
+            git push origin main
+            Write-Host "Successfully committed and pushed updated datasets."
+          } else {
+            Write-Host "No changes detected. Textbook data is up to date."
+          }

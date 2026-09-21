@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@600;700;900&display=swap" rel="stylesheet">
   
   <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="style.css?v=20260917_10">
+  <link rel="stylesheet" href="style.css?v=20260921_01">
 </head>
 <body class="theme-light">
   <!-- 頂部導航欄 (列印時自動隱藏) -->
@@ -74,6 +74,47 @@
               <input type="text" id="paperSubtitleInput" class="input-text" value="詞彙理解・錯字訂正・重組造句・國字注音・素養命題評量">
             </div>
 
+            <!-- 教科書課綱指定 (康軒/南一/翰林) -->
+            <div class="control-group">
+              <label for="textbookPressSelect">教科書版本課綱指定：</label>
+              <select id="textbookPressSelect" class="select-box">
+                <option value="none" selected>🌐 不指定版本（使用全量 31,302 筆題庫自由命題）</option>
+                <option value="康軒版">📘 康軒版國語（最新學年度課綱生字詞庫）</option>
+                <option value="南一版">📙 南一版國語（最新學年度課綱生字詞庫）</option>
+                <option value="翰林版">📗 翰林版國語（最新學年度課綱生字詞庫）</option>
+              </select>
+            </div>
+
+            <!-- 教科書年級與學期 -->
+            <div class="control-group" id="textbookGradeGroup" style="display: none;">
+              <label for="textbookGradeSelect">教材年級與學期：</label>
+              <select id="textbookGradeSelect" class="select-box">
+                <option value="1_1">國小一年級 上學期</option>
+                <option value="1_2">國小一年級 下學期</option>
+                <option value="2_1">國小二年級 上學期</option>
+                <option value="2_2">國小二年級 下學期</option>
+                <option value="3_1" selected>國小三年級 上學期</option>
+                <option value="3_2">國小三年級 下學期</option>
+                <option value="4_1">國小四年級 上學期</option>
+                <option value="4_2">國小四年級 下學期</option>
+                <option value="5_1">國小五年級 上學期</option>
+                <option value="5_2">國小五年級 下學期</option>
+                <option value="6_1">國小六年級 上學期</option>
+                <option value="6_2">國小六年級 下學期</option>
+              </select>
+            </div>
+
+            <!-- 課次與段考範圍 -->
+            <div class="control-group" id="textbookScopeGroup" style="display: none;">
+              <label for="textbookScopeSelect">課次與段考範圍：</label>
+              <select id="textbookScopeSelect" class="select-box">
+                <option value="all" selected>📖 全冊課文生字詞彙（總複習）</option>
+                <option value="1-4">🎯 第 1～4 課（第一次段考複習）</option>
+                <option value="5-8">🎯 第 5～8 課（第二次段考複習）</option>
+                <option value="9-12">🎯 第 9～12 課（期末評量複習）</option>
+              </select>
+            </div>
+
             <!-- 適用對象 / 題型範圍 -->
             <div class="control-group">
               <label for="targetScopeSelect">練習對象與題型專題：</label>
@@ -86,6 +127,9 @@
                 <option value="typo">🔍 造句錯字訂正專題（常見形音義易錯字挑錯與改正）</option>
                 <option value="unscramble">🧩 重組造句專題（文句詞組智慧重組排序）</option>
                 <option value="idiom">🏆 成語大挑戰專題（成語造句、釋義與綜合挑戰）</option>
+                <option value="idiom_low">👶 國小低年級常用成語專題（教育部官方精選 50 則）</option>
+                <option value="idiom_mid">👦 國小中年級常用成語專題（教育部官方精選 54 則）</option>
+                <option value="idiom_high">👨‍🎓 國小高年級常用成語專題（教育部官方精選 46 則）</option>
                 <option value="elementary">🎒 國小組專用（基礎詞彙 + 國字注音 + 照樣造句）</option>
                 <option value="junior_high">🎓 國中進階組（進階成語 + 錯字訂正 + 關聯詞複句）</option>
                 <option value="sentence">📝 短語練習專題（照樣造句仿寫手寫格）</option>
@@ -211,6 +255,9 @@
             <label>練習題型：</label>
             <div class="mode-chips">
               <button class="mode-chip active" data-mode="idiom">🏆 成語造句</button>
+              <button class="mode-chip" data-mode="idiom_low">👶 低年級成語 (50)</button>
+              <button class="mode-chip" data-mode="idiom_mid">👦 中年級成語 (54)</button>
+              <button class="mode-chip" data-mode="idiom_high">👨‍🎓 高年級成語 (46)</button>
               <button class="mode-chip" data-mode="zhuyin">🔤 國字注音</button>
               <button class="mode-chip" data-mode="synonym">🔄 近義替換</button>
               <button class="mode-chip" data-mode="situational">🎭 情境成語</button>
@@ -319,6 +366,8 @@
   </main>
 
   <script src="./data/question_bank.js?v=20260917_04" defer></script>
-  <script src="app.js?v=20260917_10" defer></script>
+  <script src="./data/idiom_list_150.js?v=20260921_01" defer></script>
+  <script src="./data/textbook_data.js?v=20260921_01" defer></script>
+  <script src="app.js?v=20260921_01" defer></script>
 </body>
 </html>
