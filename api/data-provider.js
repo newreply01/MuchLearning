@@ -266,7 +266,7 @@ function loadDataSources() {
       title: item.word,
       zhuyin: item.zhuyin,
       definition: `教育部國小官方推薦常用成語（${item.levelText}）。`,
-      example: `平日寫作與說話時，若能適切引用「${item.word}」，能讓文意更加生動生輝。`,
+      example: '',
       synonyms: '',
       antonyms: '',
       difficulty: item.level === 'low' ? 'elementary' : 'junior_high',
@@ -332,7 +332,7 @@ function formatZhuyin(rawZhuyin) {
 /**
  * 深入清洗字詞釋義與例句，嚴格杜絕題目洩漏解答：
  * 1. 提取隱藏在 definition 中的真實造句 (例如 "造句：故宮博物院典藏許多古代官家所藏的珍玩。")
- * 2. 徹底濾除釋義中的造句、引文出處（如「紅樓夢˙第五十二回...」）、書證例句
+ * 2. 徹底濾除釋義中的造句、引文出處（如「紅樓夢˙第五十二回...」）、書證例句、如：「...」
  * 3. 若目標字詞依然出現在釋義中，強制替換為掩碼「【　　】」，100% 保證題幹絕不出現答案
  */
 function sanitizeItemForQuestion(item) {
@@ -349,10 +349,11 @@ function sanitizeItemForQuestion(item) {
     }
   }
 
-  // 2. 清除 definition 內的所有附帶造句、典籍引文、出處書證、別稱變體
+  // 2. 清除 definition 內的所有附帶造句、典籍引文、出處書證、別稱變體、如：「...」
   let cleanDef = def || '';
   cleanDef = cleanDef.split(/(?:語本|語出|語見|典出|書證|出處|亦作|或作|亦稱|參見|〔例|\[例|△)/)[0];
   cleanDef = cleanDef.split(/(?:造句|例句|如|例|§)\s*[:：]/)[0];
+  cleanDef = cleanDef.replace(/(?:如|例如)\s*[：:「].*$/, '').trim();
   cleanDef = cleanDef.replace(/(?:[，、；。]|\s+)?[\w\u4e00-\u9fa5〇○\d《》〈〉]{1,20}[·˙・].*$/g, '');
   cleanDef = cleanDef.replace(/^[\d\.\s、]+/g, '').trim();
 
@@ -361,14 +362,19 @@ function sanitizeItemForQuestion(item) {
     cleanDef = def.split(/[。！？\n]/)[0].trim();
   }
 
+  // 避免釋義過長難以閱讀（考試用紙排版最適長度約 45 字內）
+  if (cleanDef.length > 45) {
+    cleanDef = cleanDef.slice(0, 42).replace(/[，、；]$/, '') + '…';
+  }
+
   // 確保結尾具備完整標點
-  if (cleanDef && !/[。！？]$/.test(cleanDef)) {
+  if (cleanDef && !/[。！？…]$/.test(cleanDef)) {
     cleanDef += '。';
   }
 
   // 3. 嚴格遮罩：釋義中若有目標詞，一律換成「【　　】」
   if (word && cleanDef.includes(word)) {
-    cleanDef = cleanDef.replace(new RegExp(word, 'g'), '【　　】');
+    cleanDef = cleanDef.replace(new RegExp(escapeRegExp(word), 'g'), '【　　】');
   }
 
   // 4. 清理例句中的「造句：」前綴
@@ -379,24 +385,122 @@ function sanitizeItemForQuestion(item) {
   return { cleanExample: ex, cleanDef };
 }
 
+/**
+ * 判斷是否為實質高品質情境例句（杜絕任何空泛罐頭模板）
+ */
+function isGenuineExample(sentence, word) {
+  if (!sentence || typeof sentence !== 'string') return false;
+  if (!word || !sentence.includes(word)) return false;
+  if (sentence.includes('掌握') && sentence.includes('用法')) return false;
+  if (sentence.includes('認真體會') || sentence.includes('適切引用') || sentence.includes('生動生輝')) return false;
+  if (sentence.includes('在文章中恰當地使用了') || sentence.includes('日常生活中常說')) return false;
+  if (sentence.includes('請寫出') || sentence.includes('完成完整造句') || sentence.includes('發揮想像力')) return false;
+  if (sentence.includes('教育部國小官方推薦') || sentence.includes('課文生字語詞')) return false;
+  const stripped = sentence.replace(/[「」『』【】（）\s，、。！？；]/g, '');
+  if (stripped.length <= word.length + 3) return false;
+  return true;
+}
+
+/**
+ * 取得字數/詞性嚴格對齊的干擾選項 (保證單字配單字、成語配成語、二字詞配二字詞)
+ */
+function getConsistentDistractors(targetWord, pool = [], count = 3, rawBankFallback = []) {
+  if (!targetWord) return [];
+  const targetLen = targetWord.length;
+  const isSingle = (targetLen === 1);
+  const isIdiom = (targetLen === 4);
+
+  // 1. 同長度候選詞 (優先)
+  let candidates = (pool || []).filter(item => {
+    const w = (typeof item === 'string') ? item : (item.word || item.title || '');
+    if (!w || w === targetWord) return false;
+    if (w.includes(targetWord) || targetWord.includes(w)) return false;
+    return w.length === targetLen;
+  });
+
+  // 2. 若同長度候選不足，從 rawBankFallback 補充同長度詞
+  if (candidates.length < count && rawBankFallback && rawBankFallback.length > 0) {
+    const existingWords = new Set(candidates.map(i => typeof i === 'string' ? i : (i.word || i.title)));
+    existingWords.add(targetWord);
+    const extra = rawBankFallback.filter(item => {
+      const w = (typeof item === 'string') ? item : (item.word || item.title || '');
+      if (!w || existingWords.has(w)) return false;
+      if (w.includes(targetWord) || targetWord.includes(w)) return false;
+      return w.length === targetLen;
+    });
+    candidates = [...candidates, ...extra];
+  }
+
+  // 3. 防禦補齊（單字生字與四字成語嚴格禁止跨字數混雜）
+  if (candidates.length < count && !isSingle && !isIdiom) {
+    const existingWords = new Set(candidates.map(i => typeof i === 'string' ? i : (i.word || i.title)));
+    existingWords.add(targetWord);
+    const fallbackSource = (rawBankFallback && rawBankFallback.length > 0) ? rawBankFallback : pool;
+    const extra = (fallbackSource || []).filter(item => {
+      const w = (typeof item === 'string') ? item : (item.word || item.title || '');
+      if (!w || existingWords.has(w)) return false;
+      return Math.abs(w.length - targetLen) <= 1 && w.length >= 2;
+    });
+    candidates = [...candidates, ...extra];
+  }
+
+  const chosen = getRandomSample(candidates, count);
+  return chosen.map(i => typeof i === 'string' ? i : (i.word || i.title));
+}
+
+/**
+ * 取得音節長度對齊的注音干擾選項 (二字詞配二音節注音、三字詞配三音節注音)
+ */
+function getConsistentZhuyinDistractors(targetZhuyin, poolWithZhuyin = [], count = 3) {
+  if (!targetZhuyin || !poolWithZhuyin || poolWithZhuyin.length === 0) return [];
+  const formattedTarget = formatZhuyin(targetZhuyin);
+  const targetPartsCount = formattedTarget.split(/\s+/).length;
+
+  let candidates = poolWithZhuyin.filter(item => {
+    if (!item.zhuyin) return false;
+    const fz = formatZhuyin(item.zhuyin);
+    if (!fz || fz === formattedTarget) return false;
+    return fz.split(/\s+/).length === targetPartsCount;
+  });
+
+  if (candidates.length < count) {
+    candidates = poolWithZhuyin.filter(item => {
+      if (!item.zhuyin) return false;
+      const fz = formatZhuyin(item.zhuyin);
+      return fz && fz !== formattedTarget;
+    });
+  }
+
+  return getRandomSample(candidates, count).map(i => formatZhuyin(i.zhuyin));
+}
+
 // 題型建構器
-function buildClozeQuestion(item, pool) {
+function buildClozeQuestion(item, pool, rawBankRef) {
   if (!item || !item.word) return null;
   const { cleanExample, cleanDef } = sanitizeItemForQuestion(item);
   let maskedSentence = '';
+  const isSingleChar = (item.word.length === 1);
+  const isIdiom = (item.word.length === 4 || item.type === 'idiom');
+  const termLabel = isSingleChar ? '生字' : (isIdiom ? '成語' : '詞語');
 
-  if (cleanExample && cleanExample.includes(item.word)) {
-    maskedSentence = cleanExample.replace(item.word, '【　　　　】');
-    if (!maskedSentence.startsWith('「') && !maskedSentence.includes('文句')) {
-      maskedSentence = `「${maskedSentence}」文句中最適當填入的詞語是【　　　　】。`;
+  if (isGenuineExample(cleanExample, item.word)) {
+    let cleanSentence = cleanExample.replace(/^[「"『\s]+/, '').replace(/[」"』\s]+$/, '');
+    const masked = cleanSentence.replace(new RegExp(escapeRegExp(item.word), 'g'), '【　　　　】');
+    maskedSentence = `「${masked}」文句中最適當填入的${termLabel}是【　　　　】。`;
+  } else if (cleanDef && cleanDef !== '課文生字語詞。') {
+    let displayDef = cleanDef.replace(/^[12345１２３４５\.\s、]+/g, '').replace(/(?:如|例如)\s*[：:「].*$/, '').trim();
+    if (displayDef.length > 40) displayDef = displayDef.slice(0, 38) + '…';
+    if (!/[。！？…]$/.test(displayDef)) displayDef += '。';
+    if (isSingleChar) {
+      maskedSentence = `下列生字中，字義為「${displayDef}」的是【　　　　】。`;
+    } else {
+      maskedSentence = `下列${termLabel}中，意思為「${displayDef}」的是【　　　　】。`;
     }
-  } else if (cleanDef) {
-    maskedSentence = `下列詞語中，意思為「${cleanDef}」的是【　　　　】。`;
   } else {
-    maskedSentence = `下列文句中，最適當填入的詞語是【　　　　】。`;
+    maskedSentence = `下列文句中，最適當填入的${termLabel}是【　　　　】。`;
   }
 
-  const distractors = getRandomSample(pool.filter(i => i.word !== item.word), 3).map(i => i.word);
+  const distractors = getConsistentDistractors(item.word, pool, 3, rawBankRef);
   const options = shuffleArray([item.word, ...distractors]);
 
   return {
@@ -408,17 +512,19 @@ function buildClozeQuestion(item, pool) {
   };
 }
 
-function buildZhuyinQuestion(item, poolWithZhuyin) {
+function buildZhuyinQuestion(item, poolWithZhuyin, rawBankRef) {
   if (!item || !item.word || !item.zhuyin) return null;
   const formatted = formatZhuyin(item.zhuyin);
   const isWriteChar = Math.random() > 0.5;
 
   if (isWriteChar) {
-    let sentence = item.example || `請寫出「${item.word}」的國字。`;
-    if (sentence.includes(item.word)) {
-      sentence = sentence.replace(item.word, `（　　）[注音：${formatted}]`);
+    let sentence = '';
+    if (isGenuineExample(item.example, item.word)) {
+      sentence = `「${item.example.replace(item.word, `（　　）[注音：${formatted}]`)}」文句中最適當填入的國字是：`;
+    } else {
+      sentence = `請選出注音為「${formatted}」的正確國字：`;
     }
-    const distractors = getRandomSample(poolWithZhuyin.filter(i => i.word !== item.word), 3).map(i => i.word);
+    const distractors = getConsistentDistractors(item.word, poolWithZhuyin, 3, rawBankRef);
     const options = shuffleArray([item.word, ...distractors]);
 
     return {
@@ -432,11 +538,8 @@ function buildZhuyinQuestion(item, poolWithZhuyin) {
       handwriteHint: `國字填寫：（ ＿＿＿＿ ）`
     };
   } else {
-    let sentence = item.example || `請辨別「${item.word}」的正確注音。`;
-    if (sentence.includes(item.word)) {
-      sentence = sentence.replace(item.word, `【${item.word}】`);
-    }
-    const distractors = getRandomSample(poolWithZhuyin.filter(i => i.zhuyin !== item.zhuyin), 3).map(i => formatZhuyin(i.zhuyin));
+    let sentence = `【看字辨注音】請選出【${item.word}】的正確注音：`;
+    const distractors = getConsistentZhuyinDistractors(item.zhuyin, poolWithZhuyin, 3);
     const options = shuffleArray([formatted, ...distractors]);
 
     return {
@@ -524,24 +627,22 @@ function buildSynonymQuestion(item, rawBank, bankByType) {
   const correctSyn = synList[0];
   if (!correctSyn) return null;
 
-  let sentence = sourceItem.example || `他在文章中恰當地使用了「${sourceItem.word}」。`;
-  if (sentence.includes(sourceItem.word)) {
-    sentence = sentence.replace(sourceItem.word, `「${sourceItem.word}」`);
+  let promptSentence = '';
+  if (isGenuineExample(sourceItem.example, sourceItem.word)) {
+    let cleanSentence = sourceItem.example.replace(/^[「"『\s]+/, '').replace(/[」"』\s]+$/, '');
+    cleanSentence = cleanSentence.replace(sourceItem.word, `「${sourceItem.word}」`);
+    promptSentence = `下列文句「　」中的詞語，替換為哪一個選項後，句子意思「最相近」？<br>「${cleanSentence}」`;
   } else {
-    sentence = `「${sourceItem.word}」：${sentence}`;
+    promptSentence = `下列選項中，何者的詞義與「${sourceItem.word}」最相近？`;
   }
 
-  const distractors = getRandomSample(
-    rawBank.filter(i => i.word !== sourceItem.word && i.word !== correctSyn),
-    3
-  ).map(i => i.word);
-
+  const distractors = getConsistentDistractors(correctSyn, rawBank, 3);
   const options = shuffleArray([correctSyn, ...distractors]);
 
   return {
     ...sourceItem,
     quizType: 'synonym',
-    promptSentence: `下列文句「　」中的詞語，替換為哪一個選項後，句子意思「最相近」？<br>「${sentence}」`,
+    promptSentence,
     options,
     correctAnswer: correctSyn,
     targetWord: sourceItem.word,
@@ -784,15 +885,25 @@ function getQuestions(params = {}) {
           if (m) {
             textbookPool.push({ ...m, lessonNum: l.lessonNum, lessonTitle: l.lessonTitle, press });
           } else {
-            let ex = w.desc ? (w.desc.match(/\[例\]([^。！？]+[。！？]?)/) || [null, `我們要正確掌握「${w.word}」的用法。`])[1] : '';
+            let exMatch = w.desc ? w.desc.match(/\[例\]([^。！？\n\r]+[。！？]?)/) : null;
+            let ex = exMatch ? exMatch[1].trim() : '';
+            if (!ex && w.desc) {
+              const ruMatch = w.desc.match(/如：「([^」]{6,}[。！？])」/);
+              if (ruMatch && ruMatch[1].includes(w.word)) {
+                ex = ruMatch[1].trim();
+              }
+            }
+            let def = w.desc ? w.desc.replace(/\[例\].*$/, '').replace(/(?:如|例如)\s*[：:「].*$/, '').trim() : '';
+            if (def && !/[。！？]$/.test(def)) def += '。';
+
             textbookPool.push({
               id: `tb-${l.academicYear}-${w.word}`,
-              type: 'vocabulary',
+              type: (w.word.length === 1) ? 'character' : (w.word.length === 4 ? 'idiom' : 'vocabulary'),
               category_name: `${press} 第${l.lessonNum}課`,
               word: w.word,
               title: w.word,
               zhuyin: '',
-              definition: w.desc ? w.desc.replace(/\[例\].*$/, '').trim() : '課文生字語詞。',
+              definition: def || '課文生字語詞。',
               example: ex,
               lessonNum: l.lessonNum,
               lessonTitle: l.lessonTitle,
@@ -814,7 +925,7 @@ function getQuestions(params = {}) {
   if (activeMode === 'zhuyin') {
     const cands = shuffleArray(bankByType.withZhuyin);
     for (let c of cands) {
-      const q = buildZhuyinQuestion(c, bankByType.withZhuyin);
+      const q = buildZhuyinQuestion(c, bankByType.withZhuyin, rawBank);
       if (q) collected.push(q);
       if (collected.length >= count) break;
     }
@@ -865,7 +976,7 @@ function getQuestions(params = {}) {
     for (let c of cands) {
       const r = Math.random();
       let q = null;
-      if (r < 0.4) q = buildClozeQuestion(c, bankByType.idiom);
+      if (r < 0.4) q = buildClozeQuestion(c, bankByType.idiom, rawBank);
       else if (r < 0.7) q = buildSituationalQuestion(c, bankByType);
       else q = buildTypoQuestion(c);
       if (q) collected.push(q);
@@ -876,7 +987,7 @@ function getQuestions(params = {}) {
     for (let c of cands) {
       const r = Math.random();
       let q = null;
-      if (r < 0.4) q = buildClozeQuestion(c, bankByType.idiom);
+      if (r < 0.4) q = buildClozeQuestion(c, bankByType.idiom, rawBank);
       else if (r < 0.7) q = buildSituationalQuestion(c, bankByType);
       else q = buildTypoQuestion(c);
       if (q) collected.push(q);
@@ -887,7 +998,7 @@ function getQuestions(params = {}) {
     for (let c of cands) {
       const r = Math.random();
       let q = null;
-      if (r < 0.4) q = buildClozeQuestion(c, bankByType.idiom);
+      if (r < 0.4) q = buildClozeQuestion(c, bankByType.idiom, rawBank);
       else if (r < 0.7) q = buildSituationalQuestion(c, bankByType);
       else q = buildTypoQuestion(c);
       if (q) collected.push(q);
@@ -898,7 +1009,7 @@ function getQuestions(params = {}) {
     for (let c of cands) {
       const r = Math.random();
       let q = null;
-      if (r < 0.4) q = buildClozeQuestion(c, bankByType.idiom);
+      if (r < 0.4) q = buildClozeQuestion(c, bankByType.idiom, rawBank);
       else if (r < 0.7) q = buildSituationalQuestion(c, bankByType);
       else q = buildTypoQuestion(c);
       if (q) collected.push(q);
@@ -909,8 +1020,8 @@ function getQuestions(params = {}) {
     for (let c of cands) {
       let q = null;
       if (c.type === 'sentence') q = buildSentenceMimicQuestion(c);
-      else if (Math.random() < 0.5) q = buildZhuyinQuestion(c, bankByType.withZhuyin);
-      else q = buildClozeQuestion(c, rawBank);
+      else if (Math.random() < 0.5) q = buildZhuyinQuestion(c, bankByType.withZhuyin, rawBank);
+      else q = buildClozeQuestion(c, rawBank, rawBank);
       if (q) collected.push(q);
       if (collected.length >= count) break;
     }
@@ -933,18 +1044,18 @@ function getQuestions(params = {}) {
       const r = collected.length % 4;
       let q = null;
       if (r === 0 && tIdx < tbShuffled.length) {
-        q = buildClozeQuestion(tbShuffled[tIdx++], rawBank);
+        q = buildClozeQuestion(tbShuffled[tIdx++], textbookPool, rawBank);
       } else if (r === 1 && tIdx < tbShuffled.length) {
         const item = tbShuffled[tIdx++];
         if (!item.zhuyin) {
           const found = rawBank.find(r => r.word === item.word && r.zhuyin);
           if (found) item.zhuyin = found.zhuyin;
         }
-        q = buildZhuyinQuestion(item, bankByType.withZhuyin) || buildClozeQuestion(item, rawBank);
+        q = buildZhuyinQuestion(item, bankByType.withZhuyin, rawBank) || buildClozeQuestion(item, textbookPool, rawBank);
       } else if (r === 2 && tIdx < tbShuffled.length) {
-        q = buildTypoQuestion(tbShuffled[tIdx++]) || buildClozeQuestion(tbShuffled[tIdx++], rawBank);
+        q = buildTypoQuestion(tbShuffled[tIdx++]) || buildClozeQuestion(tbShuffled[tIdx++], textbookPool, rawBank);
       } else if (r === 3 && iIdx < idiomShuffled.length) {
-        q = buildClozeQuestion(idiomShuffled[iIdx++], bankByType.idiom);
+        q = buildClozeQuestion(idiomShuffled[iIdx++], bankByType.idiom, rawBank);
       }
       if (q) collected.push(q);
     }
@@ -954,12 +1065,12 @@ function getQuestions(params = {}) {
     for (let item of pool) {
       const r = Math.random();
       let q = null;
-      if (r < 0.3) q = buildClozeQuestion(item, rawBank);
-      else if (r < 0.5) q = buildZhuyinQuestion(item, bankByType.withZhuyin);
+      if (r < 0.3) q = buildClozeQuestion(item, rawBank, rawBank);
+      else if (r < 0.5) q = buildZhuyinQuestion(item, bankByType.withZhuyin, rawBank);
       else if (r < 0.7) q = buildTypoQuestion(item);
       else if (r < 0.85 && item.type === 'idiom') q = buildSituationalQuestion(item, bankByType);
       else if (item.synonyms) q = buildSynonymQuestion(item, rawBank, bankByType);
-      else q = buildClozeQuestion(item, rawBank);
+      else q = buildClozeQuestion(item, rawBank, rawBank);
       if (q) collected.push(q);
       if (collected.length >= count) break;
     }
@@ -970,7 +1081,7 @@ function getQuestions(params = {}) {
   const fallbackList = shuffleArray(rawBank.length ? rawBank : bankByType.idiom);
   while (collected.length < count && fallbackList.length > 0) {
     const item = fallbackList[fIdx % fallbackList.length];
-    const q = buildClozeQuestion(item, rawBank);
+    const q = buildClozeQuestion(item, rawBank, rawBank);
     if (q) collected.push(q);
     fIdx++;
     if (fIdx > count * 3) break; // 防禦無限迴圈

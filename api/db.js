@@ -100,7 +100,7 @@ const SEED_DATA = {
         {
           id: 'q-demo-4',
           quizType: 'synonym',
-          promptSentence: '下列文句「　」中的詞語，替換為哪一個選項後，句子意思「最相近」？<br>「他在文章中恰當地使用了「徘徊」。」',
+          promptSentence: '下列選項中，何者的詞義與「徘徊」最相近？',
           options: ['盤桓', '果決', '謹慎', '燦爛'],
           correctAnswer: '盤桓',
           targetWord: '徘徊',

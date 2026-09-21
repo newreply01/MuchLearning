@@ -574,7 +574,7 @@
           title: item.word,
           zhuyin: item.zhuyin,
           definition: `教育部國小官方推薦常用成語（${item.levelText}）。`,
-          example: `平日寫作與說話時，若能適切引用「${item.word}」，能讓文意更加生動生輝。`,
+          example: '',
           synonyms: '',
           antonyms: '',
           template: item.word,
@@ -796,7 +796,7 @@
   /**
    * 深入清洗字詞釋義與例句，嚴格杜絕題目洩漏解答：
    * 1. 提取隱藏在 definition 中的真實造句 (例如 "造句：故宮博物院典藏許多古代官家所藏的珍玩。")
-   * 2. 徹底濾除釋義中的造句、引文出處（如「紅樓夢˙第五十二回...」）、書證例句
+   * 2. 徹底濾除釋義中的造句、引文出處（如「紅樓夢˙第五十二回...」）、書證例句、如：「...」
    * 3. 若目標字詞依然出現在釋義中，強制替換為掩碼「【　　】」，100% 保證題幹絕不出現答案
    */
   function sanitizeItemForQuestion(item) {
@@ -813,10 +813,11 @@
       }
     }
 
-    // 2. 清除 definition 內的所有附帶造句、典籍引文、出處書證、別稱變體
+    // 2. 清除 definition 內的所有附帶造句、典籍引文、出處書證、別稱變體、如：「...」
     let cleanDef = def || '';
     cleanDef = cleanDef.split(/(?:語本|語出|語見|典出|書證|出處|亦作|或作|亦稱|參見|〔例|\[例|△)/)[0];
     cleanDef = cleanDef.split(/(?:造句|例句|如|例|§)\s*[:：]/)[0];
+    cleanDef = cleanDef.replace(/(?:如|例如)\s*[：:「].*$/, '').trim();
     cleanDef = cleanDef.replace(/(?:[，、；。]|\s+)?[\w\u4e00-\u9fa5〇○\d《》〈〉]{1,20}[·˙・].*$/g, '');
     cleanDef = cleanDef.replace(/^[\d\.\s、]+/g, '').trim();
 
@@ -825,14 +826,19 @@
       cleanDef = def.split(/[。！？\n]/)[0].trim();
     }
 
+    // 避免釋義過長難以閱讀（考試用紙排版最適長度約 45 字內）
+    if (cleanDef.length > 45) {
+      cleanDef = cleanDef.slice(0, 42).replace(/[，、；]$/, '') + '…';
+    }
+
     // 確保結尾具備完整標點
-    if (cleanDef && !/[。！？]$/.test(cleanDef)) {
+    if (cleanDef && !/[。！？…]$/.test(cleanDef)) {
       cleanDef += '。';
     }
 
     // 3. 嚴格遮罩：釋義中若有目標詞，一律換成「【　　】」
     if (word && cleanDef.includes(word)) {
-      cleanDef = cleanDef.replace(new RegExp(word, 'g'), '【　　】');
+      cleanDef = cleanDef.replace(new RegExp(escapeRegExp(word), 'g'), '【　　】');
     }
 
     // 4. 清理例句中的「造句：」前綴
@@ -843,25 +849,123 @@
     return { cleanExample: ex, cleanDef };
   }
 
+  /**
+   * 判斷是否為實質高品質情境例句（杜絕任何空泛罐頭模板）
+   */
+  function isGenuineExample(sentence, word) {
+    if (!sentence || typeof sentence !== 'string') return false;
+    if (!word || !sentence.includes(word)) return false;
+    if (sentence.includes('掌握') && sentence.includes('用法')) return false;
+    if (sentence.includes('認真體會') || sentence.includes('適切引用') || sentence.includes('生動生輝')) return false;
+    if (sentence.includes('在文章中恰當地使用了') || sentence.includes('日常生活中常說')) return false;
+    if (sentence.includes('請寫出') || sentence.includes('完成完整造句') || sentence.includes('發揮想像力')) return false;
+    if (sentence.includes('教育部國小官方推薦') || sentence.includes('課文生字語詞')) return false;
+    const stripped = sentence.replace(/[「」『』【】（）\s，、。！？；]/g, '');
+    if (stripped.length <= word.length + 3) return false;
+    return true;
+  }
+
+  /**
+   * 取得字數/詞性嚴格對齊的干擾選項 (保證單字配單字、成語配成語、二字詞配二字詞)
+   */
+  function getConsistentDistractors(targetWord, pool = [], count = 3, rawBankFallback = []) {
+    if (!targetWord) return [];
+    const targetLen = targetWord.length;
+    const isSingle = (targetLen === 1);
+    const isIdiom = (targetLen === 4);
+
+    // 1. 同長度候選詞 (優先)
+    let candidates = (pool || []).filter(item => {
+      const w = (typeof item === 'string') ? item : (item.word || item.title || '');
+      if (!w || w === targetWord) return false;
+      if (w.includes(targetWord) || targetWord.includes(w)) return false;
+      return w.length === targetLen;
+    });
+
+    // 2. 若同長度候選不足，從 rawBankFallback 補充同長度詞
+    if (candidates.length < count && rawBankFallback && rawBankFallback.length > 0) {
+      const existingWords = new Set(candidates.map(i => typeof i === 'string' ? i : (i.word || i.title)));
+      existingWords.add(targetWord);
+      const extra = rawBankFallback.filter(item => {
+        const w = (typeof item === 'string') ? item : (item.word || item.title || '');
+        if (!w || existingWords.has(w)) return false;
+        if (w.includes(targetWord) || targetWord.includes(w)) return false;
+        return w.length === targetLen;
+      });
+      candidates = [...candidates, ...extra];
+    }
+
+    // 3. 防禦補齊（單字生字與四字成語嚴格禁止跨字數混雜）
+    if (candidates.length < count && !isSingle && !isIdiom) {
+      const existingWords = new Set(candidates.map(i => typeof i === 'string' ? i : (i.word || i.title)));
+      existingWords.add(targetWord);
+      const fallbackSource = (rawBankFallback && rawBankFallback.length > 0) ? rawBankFallback : pool;
+      const extra = (fallbackSource || []).filter(item => {
+        const w = (typeof item === 'string') ? item : (item.word || item.title || '');
+        if (!w || existingWords.has(w)) return false;
+        return Math.abs(w.length - targetLen) <= 1 && w.length >= 2;
+      });
+      candidates = [...candidates, ...extra];
+    }
+
+    const chosen = getRandomSample(candidates, count);
+    return chosen.map(i => typeof i === 'string' ? i : (i.word || i.title));
+  }
+
+  /**
+   * 取得音節長度對齊的注音干擾選項 (二字詞配二音節注音、三字詞配三音節注音)
+   */
+  function getConsistentZhuyinDistractors(targetZhuyin, poolWithZhuyin = [], count = 3) {
+    if (!targetZhuyin || !poolWithZhuyin || poolWithZhuyin.length === 0) return [];
+    const formattedTarget = formatZhuyin(targetZhuyin);
+    const targetPartsCount = formattedTarget.split(/\s+/).length;
+
+    let candidates = poolWithZhuyin.filter(item => {
+      if (!item.zhuyin) return false;
+      const fz = formatZhuyin(item.zhuyin);
+      if (!fz || fz === formattedTarget) return false;
+      return fz.split(/\s+/).length === targetPartsCount;
+    });
+
+    if (candidates.length < count) {
+      candidates = poolWithZhuyin.filter(item => {
+        if (!item.zhuyin) return false;
+        const fz = formatZhuyin(item.zhuyin);
+        return fz && fz !== formattedTarget;
+      });
+    }
+
+    return getRandomSample(candidates, count).map(i => formatZhuyin(i.zhuyin));
+  }
+
   // 1. 克漏字選詞造句 (Cloze)
-  function buildClozeQuestion(item) {
+  function buildClozeQuestion(item, customPool) {
     if (!item || !item.word) return null;
     const { cleanExample, cleanDef } = sanitizeItemForQuestion(item);
     let maskedSentence = '';
+    const isSingleChar = (item.word.length === 1);
+    const isIdiom = (item.word.length === 4 || item.type === 'idiom');
+    const termLabel = isSingleChar ? '生字' : (isIdiom ? '成語' : '詞語');
 
-    if (cleanExample && cleanExample.includes(item.word)) {
-      maskedSentence = cleanExample.replace(item.word, '【　　　　】');
-      if (!maskedSentence.startsWith('「') && !maskedSentence.includes('文句')) {
-        maskedSentence = `「${maskedSentence}」文句中最適當填入的詞語是【　　　　】。`;
+    if (isGenuineExample(cleanExample, item.word)) {
+      let cleanSentence = cleanExample.replace(/^[「"『\s]+/, '').replace(/[」"』\s]+$/, '');
+      const masked = cleanSentence.replace(new RegExp(escapeRegExp(item.word), 'g'), '【　　　　】');
+      maskedSentence = `「${masked}」文句中最適當填入的${termLabel}是【　　　　】。`;
+    } else if (cleanDef && cleanDef !== '課文生字語詞。') {
+      let displayDef = cleanDef.replace(/^[12345１２３４５\.\s、]+/g, '').replace(/(?:如|例如)\s*[：:「].*$/, '').trim();
+      if (displayDef.length > 40) displayDef = displayDef.slice(0, 38) + '…';
+      if (!/[。！？…]$/.test(displayDef)) displayDef += '。';
+      if (isSingleChar) {
+        maskedSentence = `下列生字中，字義為「${displayDef}」的是【　　　　】。`;
+      } else {
+        maskedSentence = `下列${termLabel}中，意思為「${displayDef}」的是【　　　　】。`;
       }
-    } else if (cleanDef) {
-      maskedSentence = `下列詞語中，意思為「${cleanDef}」的是【　　　　】。`;
     } else {
-      maskedSentence = `下列文句中，最適當填入的詞語是【　　　　】。`;
+      maskedSentence = `下列文句中，最適當填入的${termLabel}是【　　　　】。`;
     }
 
-    const pool = (item.type === 'idiom') ? bankByType.idiom : bankByType.vocabulary;
-    const distractors = getRandomSample(pool.filter(i => i.word !== item.word), 3).map(i => i.word);
+    const pool = customPool || ((item.type === 'idiom') ? bankByType.idiom : bankByType.vocabulary);
+    const distractors = getConsistentDistractors(item.word, pool, 3, rawBank);
     const options = shuffleArray([item.word, ...distractors]);
 
     return {
@@ -881,12 +985,14 @@
 
     if (isWriteChar) {
       // 看音寫國字
-      let sentence = item.example || `請寫出「${item.word}」的國字。`;
-      if (sentence.includes(item.word)) {
-        sentence = sentence.replace(item.word, `（　　）[注音：${formattedItemZhuyin}]`);
+      let sentence = '';
+      if (isGenuineExample(item.example, item.word)) {
+        sentence = `「${item.example.replace(item.word, `（　　）[注音：${formattedItemZhuyin}]`)}」文句中最適當填入的國字是：`;
+      } else {
+        sentence = `請選出注音為「${formattedItemZhuyin}」的正確國字：`;
       }
       const pool = (item.type === 'idiom') ? bankByType.idiom : bankByType.vocabulary;
-      const distractors = getRandomSample(pool.filter(i => i.word !== item.word), 3).map(i => i.word);
+      const distractors = getConsistentDistractors(item.word, pool, 3, rawBank);
       const options = shuffleArray([item.word, ...distractors]);
 
       return {
@@ -901,12 +1007,8 @@
       };
     } else {
       // 看字辨注音
-      let sentence = item.example || `請辨別「${item.word}」的正確注音。`;
-      if (sentence.includes(item.word)) {
-        sentence = sentence.replace(item.word, `【${item.word}】`);
-      }
-      // 生成干擾注音 (抽其他詞條之注音，並經由 formatZhuyin 格式化)
-      const distractors = getRandomSample(bankByType.withZhuyin.filter(i => i.zhuyin !== item.zhuyin), 3).map(i => formatZhuyin(i.zhuyin));
+      let sentence = `【看字辨注音】請選出【${item.word}】的正確注音：`;
+      const distractors = getConsistentZhuyinDistractors(item.zhuyin, bankByType.withZhuyin, 3);
       const options = shuffleArray([formattedItemZhuyin, ...distractors]);
 
       return {
@@ -937,24 +1039,22 @@
     const correctSyn = synList[0];
     if (!correctSyn) return null;
 
-    let sentence = sourceItem.example || `他在文章中恰當地使用了「${sourceItem.word}」。`;
-    if (sentence.includes(sourceItem.word)) {
-      sentence = sentence.replace(sourceItem.word, `「${sourceItem.word}」`);
+    let promptSentence = '';
+    if (isGenuineExample(sourceItem.example, sourceItem.word)) {
+      let cleanSentence = sourceItem.example.replace(/^[「"『\s]+/, '').replace(/[」"』\s]+$/, '');
+      cleanSentence = cleanSentence.replace(sourceItem.word, `「${sourceItem.word}」`);
+      promptSentence = `下列文句「　」中的詞語，替換為哪一個選項後，句子意思「最相近」？<br>「${cleanSentence}」`;
     } else {
-      sentence = `「${sourceItem.word}」：${sentence}`;
+      promptSentence = `下列選項中，何者的詞義與「${sourceItem.word}」最相近？`;
     }
 
-    const distractors = getRandomSample(
-      rawBank.filter(i => i.word !== sourceItem.word && i.word !== correctSyn),
-      3
-    ).map(i => i.word);
-
+    const distractors = getConsistentDistractors(correctSyn, rawBank, 3);
     const options = shuffleArray([correctSyn, ...distractors]);
 
     return {
       ...sourceItem,
       quizType: 'synonym',
-      promptSentence: `下列文句「　」中的詞語，替換為哪一個選項後，句子意思「最相近」？<br>「${sentence}」`,
+      promptSentence,
       options,
       correctAnswer: correctSyn,
       targetWord: sourceItem.word,
@@ -1818,23 +1918,21 @@
               });
             } else {
               // 課本原生詞彙轉換
-              let ex = '';
               let def = wObj.desc || '';
-              const exMatch = def.match(/\[例\]([^。！？\n\r]+[。！？]?)/);
-              if (exMatch) {
-                ex = exMatch[1].trim();
-              } else {
-                const ruMatch = def.match(/如：「([^」]+)」/);
-                if (ruMatch) {
-                  ex = `我們在日常生活中常說「${ruMatch[1]}」。`;
-                } else {
-                  ex = `我們要認真體會並正確掌握「${wObj.word}」的用法。`;
+              let exMatch = def.match(/\[例\]([^。！？\n\r]+[。！？]?)/);
+              let ex = exMatch ? exMatch[1].trim() : '';
+              if (!ex) {
+                const ruMatch = def.match(/如：「([^」]{6,}[。！？])」/);
+                if (ruMatch && ruMatch[1].includes(wObj.word)) {
+                  ex = ruMatch[1].trim();
                 }
               }
-              const cleanDef = def.replace(/\[例\].*$/, '').replace(/如：「.*$/, '').trim();
+              let cleanDef = def.replace(/\[例\].*$/, '').replace(/(?:如|例如)\s*[：:「].*$/, '').trim();
+              if (cleanDef && !/[。！？]$/.test(cleanDef)) cleanDef += '。';
+
               textbookPool.push({
                 id: `tb-${lesson.academicYear}-${wObj.word}`,
-                type: 'vocabulary',
+                type: (wObj.word.length === 1) ? 'character' : (wObj.word.length === 4 ? 'idiom' : 'vocabulary'),
                 category_name: `${press} 第${lesson.lessonNum}課`,
                 word: wObj.word,
                 title: wObj.word,
@@ -1935,21 +2033,21 @@
           const r = collectedQuestions.length % 5;
           let q = null;
           if (r === 0 && tIdx < tbShuffled.length) {
-            q = buildClozeQuestion(tbShuffled[tIdx++]);
+            q = buildClozeQuestion(tbShuffled[tIdx++], textbookPool);
           } else if (r === 1 && tIdx < tbShuffled.length) {
             const cand = tbShuffled[tIdx++];
             if (!cand.zhuyin) {
               const rb = rawBank.find(item => item.word === cand.word && item.zhuyin);
               if (rb) cand.zhuyin = rb.zhuyin;
             }
-            q = buildZhuyinQuestion(cand) || buildClozeQuestion(cand);
+            q = buildZhuyinQuestion(cand) || buildClozeQuestion(cand, textbookPool);
           } else if (r === 2 && tIdx < tbShuffled.length) {
             q = buildTypoQuestion(tbShuffled[tIdx++]);
           } else if (r === 3 && iIdx < idiomShuffled.length) {
             const idiomItem = idiomShuffled[iIdx++];
             q = (Math.random() < 0.5) ? buildSituationalQuestion(idiomItem) : buildClozeQuestion(idiomItem);
           } else if (r === 4 && tIdx < tbShuffled.length) {
-            q = buildUnscrambleQuestion(tbShuffled[tIdx++]) || buildClozeQuestion(tbShuffled[tIdx++]);
+            q = buildUnscrambleQuestion(tbShuffled[tIdx++]) || buildClozeQuestion(tbShuffled[tIdx++], textbookPool);
           }
 
           if (q) collectedQuestions.push(q);
