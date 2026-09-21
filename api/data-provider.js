@@ -341,9 +341,9 @@ function sanitizeItemForQuestion(item) {
   let ex = item.example || '';
   let def = item.definition || '';
 
-  // 1. 如果原始 example 未包含目標詞，嘗試從 definition 的「造句：」或「例：」中提取
+  // 1. 如果原始 example 未包含目標詞，嘗試從 definition 的「造句：」或「例句：」中提取
   if (!ex || !ex.includes(word)) {
-    const m = def.match(/(?:造句|例句|如|例|§)\s*[:：]\s*([^。！？\n\r]+[。！？]?)/);
+    const m = def.match(/(?:造句|例句)\s*[:：]\s*([^。！？\n\r]+[。！？]?)/);
     if (m && m[1] && m[1].includes(word)) {
       ex = m[1].trim();
     }
@@ -396,6 +396,7 @@ function isGenuineExample(sentence, word) {
   if (sentence.includes('在文章中恰當地使用了') || sentence.includes('日常生活中常說')) return false;
   if (sentence.includes('請寫出') || sentence.includes('完成完整造句') || sentence.includes('發揮想像力')) return false;
   if (sentence.includes('教育部國小官方推薦') || sentence.includes('課文生字語詞')) return false;
+  if (sentence.includes('」、「')) return false; // 排除「詞語1」、「詞語2」名詞串列
   const stripped = sentence.replace(/[「」『』【】（）\s，、。！？；]/g, '');
   if (stripped.length <= word.length + 3) return false;
   return true;
@@ -885,14 +886,8 @@ function getQuestions(params = {}) {
           if (m) {
             textbookPool.push({ ...m, lessonNum: l.lessonNum, lessonTitle: l.lessonTitle, press });
           } else {
-            let exMatch = w.desc ? w.desc.match(/\[例\]([^。！？\n\r]+[。！？]?)/) : null;
+            let exMatch = (w.word.length >= 2 && w.desc) ? w.desc.match(/\[例\]([^。！？\n\r]+[。！？]?)/) : null;
             let ex = exMatch ? exMatch[1].trim() : '';
-            if (!ex && w.desc) {
-              const ruMatch = w.desc.match(/如：「([^」]{6,}[。！？])」/);
-              if (ruMatch && ruMatch[1].includes(w.word)) {
-                ex = ruMatch[1].trim();
-              }
-            }
             let def = w.desc ? w.desc.replace(/\[例\].*$/, '').replace(/(?:如|例如)\s*[：:「].*$/, '').trim() : '';
             if (def && !/[。！？]$/.test(def)) def += '。';
 
