@@ -335,7 +335,98 @@
     dictFilterType: document.getElementById('dictFilterType'),
     dictResultCount: document.getElementById('dictResultCount'),
     dictCardsList: document.getElementById('dictCardsList'),
-    btnLoadMoreDict: document.getElementById('btnLoadMoreDict')
+    btnLoadMoreDict: document.getElementById('btnLoadMoreDict'),
+
+    // 會員帳號系統
+    btnUserAuth: document.getElementById('btnUserAuth'),
+    userAvatarIcon: document.getElementById('userAvatarIcon'),
+    userStatusText: document.getElementById('userStatusText'),
+    modalAuth: document.getElementById('modalAuth'),
+    btnCloseAuthModal: document.getElementById('btnCloseAuthModal'),
+    tabAuthLogin: document.getElementById('tabAuthLogin'),
+    tabAuthRegister: document.getElementById('tabAuthRegister'),
+    btnQuickTeacher: document.getElementById('btnQuickTeacher'),
+    btnQuickStudent: document.getElementById('btnQuickStudent'),
+    btnQuickParent: document.getElementById('btnQuickParent'),
+    formLogin: document.getElementById('formLogin'),
+    loginUsername: document.getElementById('loginUsername'),
+    loginPassword: document.getElementById('loginPassword'),
+    formRegister: document.getElementById('formRegister'),
+    regRole: document.getElementById('regRole'),
+    regUsername: document.getElementById('regUsername'),
+    regPassword: document.getElementById('regPassword'),
+    regRealName: document.getElementById('regRealName'),
+    regSchool: document.getElementById('regSchool'),
+
+    // 班級試卷碼與發布分享
+    btnPublishExamCode: document.getElementById('btnPublishExamCode'),
+    paperExamCodeStamp: document.getElementById('paperExamCodeStamp'),
+    stampExamCodeText: document.getElementById('stampExamCodeText'),
+    modalExamCode: document.getElementById('modalExamCode'),
+    btnCloseExamCodeModal: document.getElementById('btnCloseExamCodeModal'),
+    publishedCodeDisplay: document.getElementById('publishedCodeDisplay'),
+    publishedTitleDisplay: document.getElementById('publishedTitleDisplay'),
+    publishedShareUrl: document.getElementById('publishedShareUrl'),
+    btnCopyShareUrl: document.getElementById('btnCopyShareUrl'),
+    btnGoToTakeExam: document.getElementById('btnGoToTakeExam'),
+    examQrCanvas: document.getElementById('examQrCanvas'),
+
+    // 線上作答視圖 (exam-view)
+    inputExamCode: document.getElementById('inputExamCode'),
+    inputStudentName: document.getElementById('inputStudentName'),
+    inputSeatNumber: document.getElementById('inputSeatNumber'),
+    btnStartExamByCode: document.getElementById('btnStartExamByCode'),
+    btnViewClassReport: document.getElementById('btnViewClassReport'),
+    examRunnerContainer: document.getElementById('examRunnerContainer'),
+    examRunnerCodeBadge: document.getElementById('examRunnerCodeBadge'),
+    examRunnerTitle: document.getElementById('examRunnerTitle'),
+    examRunnerSubtitle: document.getElementById('examRunnerSubtitle'),
+    examTimerDisplay: document.getElementById('examTimerDisplay'),
+    examQuestionsList: document.getElementById('examQuestionsList'),
+    btnSubmitExamAnswers: document.getElementById('btnSubmitExamAnswers'),
+    examResultCard: document.getElementById('examResultCard'),
+    examFinalScore: document.getElementById('examFinalScore'),
+    examScoreSummary: document.getElementById('examScoreSummary'),
+    examMistakeNotice: document.getElementById('examMistakeNotice'),
+    btnBackToExamEntry: document.getElementById('btnBackToExamEntry'),
+    btnGoToLeaderboard: document.getElementById('btnGoToLeaderboard'),
+
+    // 學習歷程與六維雷達圖 (history-view)
+    statTotalExams: document.getElementById('statTotalExams'),
+    statAvgScore: document.getElementById('statAvgScore'),
+    statUnresolvedMistakes: document.getElementById('statUnresolvedMistakes'),
+    statResolvedMistakes: document.getElementById('statResolvedMistakes'),
+    radarChartCanvas: document.getElementById('radarChartCanvas'),
+    historySubmissionsList: document.getElementById('historySubmissionsList'),
+    filterMistakeAll: document.getElementById('filterMistakeAll'),
+    filterMistakePending: document.getElementById('filterMistakePending'),
+    filterMistakeResolved: document.getElementById('filterMistakeResolved'),
+    mistakesListContainer: document.getElementById('mistakesListContainer'),
+    leaderboardTableBody: document.getElementById('leaderboardTableBody'),
+    modalRetest: document.getElementById('modalRetest'),
+    btnCloseRetestModal: document.getElementById('btnCloseRetestModal'),
+    retestModalBody: document.getElementById('retestModalBody'),
+
+    // 教師線上協作成題 (collab-view)
+    btnOpenCreateQuestion: document.getElementById('btnOpenCreateQuestion'),
+    collabTotalCount: document.getElementById('collabTotalCount'),
+    collabPendingCount: document.getElementById('collabPendingCount'),
+    collabApprovedCount: document.getElementById('collabApprovedCount'),
+    filterCollabAll: document.getElementById('filterCollabAll'),
+    filterCollabPending: document.getElementById('filterCollabPending'),
+    filterCollabApproved: document.getElementById('filterCollabApproved'),
+    collabQuestionsContainer: document.getElementById('collabQuestionsContainer'),
+    modalAddQuestion: document.getElementById('modalAddQuestion'),
+    btnCloseAddQModal: document.getElementById('btnCloseAddQModal'),
+    formAddCustomQuestion: document.getElementById('formAddCustomQuestion'),
+    addQType: document.getElementById('addQType'),
+    addQPress: document.getElementById('addQPress'),
+    addQGrade: document.getElementById('addQGrade'),
+    addQLesson: document.getElementById('addQLesson'),
+    addQPrompt: document.getElementById('addQPrompt'),
+    addQCorrectAns: document.getElementById('addQCorrectAns'),
+    addQDistractors: document.getElementById('addQDistractors'),
+    addQExplanation: document.getElementById('addQExplanation')
   };
 
   // 高品質即時啟動題庫 (保證頁面 0 毫秒秒開並立即呈現試卷，不需等待後台大數據)
@@ -372,6 +463,11 @@
   function initApp() {
     initTheme();
     bindEvents();
+    initUserAuth();
+    initExamModule();
+    initHistoryModule();
+    initCollabModule();
+    checkUrlDeepLink();
 
     // 1. 0 毫秒極速啟動：立刻使用啟動題庫渲染頁面與試卷
     processBank(STARTER_BANK, false);
@@ -540,6 +636,13 @@
         const tabId = btn.dataset.tab;
         const targetContent = document.getElementById(tabId);
         if (targetContent) targetContent.classList.add('active');
+
+        if (tabId === 'history-view') {
+          loadUserHistory();
+          loadClassLeaderboard(elements.inputExamCode ? elements.inputExamCode.value : 'K3-8942');
+        } else if (tabId === 'collab-view') {
+          loadCollabQuestions();
+        }
       });
     });
 
@@ -1916,6 +2019,7 @@
   }
 
   function renderPaperQuestions(questions, showZhuyin) {
+    lastGeneratedPaperQuestions = questions || [];
     elements.printableQuestionsList.innerHTML = '';
     const letters = ['A', 'B', 'C', 'D'];
 
@@ -2702,6 +2806,1523 @@
       }
     }
     appendDictCardsBatch();
+  }
+
+  // ============================================================================
+  // 核心功能 4: 會員帳號系統 (學生、教師、家長多角色登入與切換)
+  // ============================================================================
+  let lastGeneratedPaperQuestions = [];
+  let currentUser = {
+    id: 'u-student-1',
+    username: 'student',
+    real_name: '李小明',
+    role: 'student',
+    school_name: '示範國小',
+    grade_class: '三年二班'
+  };
+  let currentRunningExam = null;
+  let examTimerInterval = null;
+  let examStartTime = 0;
+  let currentRetestItem = null;
+  let collabFilterStatus = 'all';
+  let mistakeFilterStatus = 'all';
+  let cachedCollabList = [];
+  let cachedMistakesList = [];
+
+  function showToast(message, type = 'info') {
+    let container = document.getElementById('appToastContainer');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'appToastContainer';
+      container.style.cssText = 'position:fixed; bottom:24px; right:24px; z-index:99999; display:flex; flex-direction:column; gap:8px; pointer-events:none;';
+      document.body.appendChild(container);
+    }
+    const toast = document.createElement('div');
+    const bg = type === 'success' ? '#10b981' : (type === 'error' ? '#ef4444' : '#4f46e5');
+    toast.style.cssText = `background:${bg}; color:#fff; padding:12px 20px; border-radius:10px; font-weight:700; font-size:0.92rem; box-shadow:0 8px 24px rgba(0,0,0,0.18); display:flex; align-items:center; gap:8px; pointer-events:auto; transition:all 0.3s cubic-bezier(0.16, 1, 0.3, 1); opacity:0; transform:translateY(16px);`;
+    toast.innerHTML = message;
+    container.appendChild(toast);
+    requestAnimationFrame(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+    });
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(12px)';
+      setTimeout(() => toast.remove(), 350);
+    }, 3200);
+  }
+
+  function getRoleTitle(role) {
+    if (role === 'teacher') return '教師';
+    if (role === 'parent') return '家長';
+    return '學生';
+  }
+
+  function getRoleAvatar(role) {
+    if (role === 'teacher') return '👨‍🏫';
+    if (role === 'parent') return '👨‍👩‍👦';
+    return '👦';
+  }
+
+  function initUserAuth() {
+    const saved = localStorage.getItem('muchlearning_user');
+    if (saved) {
+      try {
+        currentUser = JSON.parse(saved);
+      } catch (e) {
+        console.warn('使用者狀態解析失敗：', e);
+      }
+    }
+    updateUserHeaderUI();
+
+    if (elements.btnUserAuth) {
+      elements.btnUserAuth.addEventListener('click', () => {
+        if (currentUser) {
+          const roleTitle = getRoleTitle(currentUser.role);
+          if (confirm(`目前登入帳號：【${currentUser.real_name} (${roleTitle})】\n所屬：${currentUser.school_name || '示範學校'} ${currentUser.grade_class || ''}\n\n是否切換其他展示帳號或重新登入？`)) {
+            openAuthModal();
+          }
+        } else {
+          openAuthModal();
+        }
+      });
+    }
+
+    if (elements.btnCloseAuthModal) {
+      elements.btnCloseAuthModal.addEventListener('click', closeAuthModal);
+    }
+    if (elements.modalAuth) {
+      elements.modalAuth.addEventListener('click', (e) => {
+        if (e.target === elements.modalAuth) closeAuthModal();
+      });
+    }
+
+    if (elements.tabAuthLogin && elements.tabAuthRegister) {
+      elements.tabAuthLogin.addEventListener('click', () => {
+        elements.tabAuthLogin.classList.add('active');
+        elements.tabAuthRegister.classList.remove('active');
+        elements.formLogin.style.display = 'block';
+        elements.formRegister.style.display = 'none';
+      });
+      elements.tabAuthRegister.addEventListener('click', () => {
+        elements.tabAuthRegister.classList.add('active');
+        elements.tabAuthLogin.classList.remove('active');
+        elements.formLogin.style.display = 'none';
+        elements.formRegister.style.display = 'block';
+      });
+    }
+
+    // 1-Click 快速展示帳號切換
+    if (elements.btnQuickTeacher) {
+      elements.btnQuickTeacher.addEventListener('click', () => performQuickLogin('teacher', '王大成 老師', 'teacher', '示範國小', '三年二班導師'));
+    }
+    if (elements.btnQuickStudent) {
+      elements.btnQuickStudent.addEventListener('click', () => performQuickLogin('student', '李小明', 'student', '示範國小', '三年二班 07號'));
+    }
+    if (elements.btnQuickParent) {
+      elements.btnQuickParent.addEventListener('click', () => performQuickLogin('parent', '李爸爸', 'parent', '示範國小', '家長委員會'));
+    }
+
+    // 登入表單提交
+    if (elements.formLogin) {
+      elements.formLogin.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = (elements.loginUsername.value || '').trim();
+        const password = (elements.loginPassword.value || '').trim();
+
+        if (window.location.protocol.startsWith('http')) {
+          try {
+            const resp = await fetch('/api/auth', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'login', username, password })
+            });
+            const data = await resp.json();
+            if (data.success && data.user) {
+              applyLoggedInUser(data.user);
+              return;
+            } else {
+              alert(data.error || '帳號或密碼錯誤');
+              return;
+            }
+          } catch (err) {
+            console.warn('雲端驗證失敗，切換本機快速相容：', err);
+          }
+        }
+
+        // 本機離線演示兜底
+        if (username === 'teacher') {
+          performQuickLogin('teacher', '王大成 老師', 'teacher', '示範國小', '導師');
+        } else if (username === 'parent') {
+          performQuickLogin('parent', '李爸爸', 'parent', '示範國小', '家長');
+        } else {
+          performQuickLogin('student', '李小明', 'student', '示範國小', '三年二班');
+        }
+      });
+    }
+
+    // 註冊表單提交
+    if (elements.formRegister) {
+      elements.formRegister.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const role = elements.regRole.value;
+        const username = elements.regUsername.value.trim();
+        const password = elements.regPassword.value.trim();
+        const real_name = elements.regRealName.value.trim();
+        const school_name = elements.regSchool.value.trim() || '示範國小';
+
+        const payload = { action: 'register', role, username, password, real_name, school_name };
+
+        if (window.location.protocol.startsWith('http')) {
+          try {
+            const resp = await fetch('/api/auth', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (data.success && data.user) {
+              applyLoggedInUser(data.user);
+              return;
+            } else {
+              alert(data.error || '註冊失敗');
+              return;
+            }
+          } catch (err) {
+            console.warn('雲端註冊失敗：', err);
+          }
+        }
+
+        const newUser = { id: `u-${Date.now()}`, username, role, real_name, school_name, grade_class: '三年級' };
+        applyLoggedInUser(newUser);
+      });
+    }
+  }
+
+  function openAuthModal() {
+    if (elements.modalAuth) elements.modalAuth.classList.add('active');
+  }
+
+  function closeAuthModal() {
+    if (elements.modalAuth) elements.modalAuth.classList.remove('active');
+  }
+
+  function performQuickLogin(username, real_name, role, school_name, grade_class) {
+    const user = {
+      id: `u-${role}-1`,
+      username,
+      real_name,
+      role,
+      school_name,
+      grade_class
+    };
+    applyLoggedInUser(user);
+  }
+
+  function applyLoggedInUser(user) {
+    currentUser = user;
+    localStorage.setItem('muchlearning_user', JSON.stringify(user));
+    updateUserHeaderUI();
+    closeAuthModal();
+    showToast(`🎉 歡迎回來，${currentUser.real_name} (${getRoleTitle(currentUser.role)})！`, 'success');
+
+    // 重新整理各分頁資訊
+    loadUserHistory();
+    loadCollabQuestions();
+  }
+
+  function updateUserHeaderUI() {
+    if (!elements.userStatusText) return;
+    if (currentUser) {
+      elements.userAvatarIcon.textContent = getRoleAvatar(currentUser.role);
+      elements.userStatusText.textContent = `${currentUser.real_name} (${getRoleTitle(currentUser.role)})`;
+      if (elements.inputStudentName) {
+        elements.inputStudentName.value = currentUser.real_name;
+      }
+    } else {
+      elements.userAvatarIcon.textContent = '👤';
+      elements.userStatusText.textContent = '登入 / 註冊';
+    }
+  }
+
+  // ============================================================================
+  // 核心功能 5: 班級試卷單一識別碼 (Exam Code)、同題作答與全班英雄榜
+  // ============================================================================
+  function initExamModule() {
+    // 1. 發布試卷碼按鈕
+    if (elements.btnPublishExamCode) {
+      elements.btnPublishExamCode.addEventListener('click', publishWorksheetAsExam);
+    }
+
+    // 關閉發布彈窗
+    if (elements.btnCloseExamCodeModal) {
+      elements.btnCloseExamCodeModal.addEventListener('click', () => {
+        elements.modalExamCode.classList.remove('active');
+      });
+    }
+    if (elements.modalExamCode) {
+      elements.modalExamCode.addEventListener('click', (e) => {
+        if (e.target === elements.modalExamCode) elements.modalExamCode.classList.remove('active');
+      });
+    }
+
+    // 複製連結
+    if (elements.btnCopyShareUrl) {
+      elements.btnCopyShareUrl.addEventListener('click', () => {
+        const url = elements.publishedShareUrl.value;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(() => {
+            showToast('📋 測驗分享連結已成功複製至剪貼簿！', 'success');
+          });
+        } else {
+          elements.publishedShareUrl.select();
+          document.execCommand('copy');
+          showToast('📋 測驗分享連結已成功複製！', 'success');
+        }
+      });
+    }
+
+    // 前往測驗該卷
+    if (elements.btnGoToTakeExam) {
+      elements.btnGoToTakeExam.addEventListener('click', () => {
+        elements.modalExamCode.classList.remove('active');
+        const code = elements.publishedCodeDisplay.textContent;
+        switchToExamTab(code);
+      });
+    }
+
+    // 2. 輸入試卷碼開始測驗
+    if (elements.btnStartExamByCode) {
+      elements.btnStartExamByCode.addEventListener('click', () => {
+        const code = (elements.inputExamCode.value || '').trim().toUpperCase();
+        if (!code) {
+          alert('請輸入班級試卷碼 (例如：K3-8942)');
+          return;
+        }
+        startExamByCode(code);
+      });
+    }
+
+    // 3. 查看班級統計與排行榜按鈕
+    if (elements.btnViewClassReport) {
+      elements.btnViewClassReport.addEventListener('click', () => {
+        const code = (elements.inputExamCode.value || 'K3-8942').trim().toUpperCase();
+        switchToHistoryAndLeaderboard(code);
+      });
+    }
+    if (elements.btnGoToLeaderboard) {
+      elements.btnGoToLeaderboard.addEventListener('click', () => {
+        const code = currentRunningExam ? currentRunningExam.exam_code : (elements.inputExamCode.value || 'K3-8942');
+        switchToHistoryAndLeaderboard(code);
+      });
+    }
+
+    // 4. 提交線上試卷
+    if (elements.btnSubmitExamAnswers) {
+      elements.btnSubmitExamAnswers.addEventListener('click', submitExamAnswers);
+    }
+
+    // 5. 重新測驗 / 返回代碼輸入頁
+    if (elements.btnBackToExamEntry) {
+      elements.btnBackToExamEntry.addEventListener('click', () => {
+        elements.examResultCard.style.display = 'none';
+        elements.examRunnerContainer.style.display = 'none';
+        const entryCard = document.querySelector('.exam-entry-card');
+        if (entryCard) entryCard.style.display = 'block';
+      });
+    }
+  }
+
+  async function publishWorksheetAsExam() {
+    const questions = (lastGeneratedPaperQuestions && lastGeneratedPaperQuestions.length > 0)
+      ? lastGeneratedPaperQuestions
+      : STARTER_BANK.slice(0, 10).map(b => buildClozeQuestion(b));
+
+    const title = elements.paperTitleInput.value || '國語文班級課堂測驗';
+    const subtitle = elements.paperSubtitleInput.value || '教育部課綱核心題型練習';
+    const authorName = currentUser ? currentUser.real_name : '語文專任教師';
+
+    let examCode = 'EX-' + Math.floor(1000 + Math.random() * 9000);
+
+    if (window.location.protocol.startsWith('http')) {
+      try {
+        const resp = await fetch('/api/exam', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'create',
+            title,
+            subtitle,
+            questions,
+            time_limit_minutes: 20,
+            user_id: currentUser ? currentUser.id : 'teacher',
+            author_name: authorName
+          })
+        });
+        const data = await resp.json();
+        if (data.success && data.exam_code) {
+          examCode = data.exam_code;
+        }
+      } catch (err) {
+        console.warn('雲端發布試卷失敗，使用本機碼：', err);
+      }
+    }
+
+    // 蓋印於 A4 試卷右上角
+    if (elements.stampExamCodeText) elements.stampExamCodeText.textContent = examCode;
+    if (elements.paperExamCodeStamp) elements.paperExamCodeStamp.style.display = 'block';
+
+    // 呈現在彈窗中
+    if (elements.publishedCodeDisplay) elements.publishedCodeDisplay.textContent = examCode;
+    if (elements.publishedTitleDisplay) elements.publishedTitleDisplay.textContent = title;
+
+    const shareUrl = `${window.location.origin}${window.location.pathname}?exam=${examCode}`;
+    if (elements.publishedShareUrl) elements.publishedShareUrl.value = shareUrl;
+
+    // 繪製 QR Code
+    if (elements.examQrCanvas) {
+      drawExamQrCode(elements.examQrCanvas, shareUrl, examCode);
+    }
+
+    if (elements.modalExamCode) elements.modalExamCode.classList.add('active');
+    showToast(`🚀 試卷發布成功！班級代碼：${examCode}`, 'success');
+  }
+
+  function switchToExamTab(code) {
+    elements.tabButtons.forEach(b => b.classList.remove('active'));
+    elements.tabContents.forEach(c => c.classList.remove('active'));
+    const tabExamBtn = document.getElementById('tabExam');
+    const examView = document.getElementById('exam-view');
+    if (tabExamBtn) tabExamBtn.classList.add('active');
+    if (examView) examView.classList.add('active');
+
+    if (elements.inputExamCode) elements.inputExamCode.value = code;
+    startExamByCode(code);
+  }
+
+  function switchToHistoryAndLeaderboard(code) {
+    elements.tabButtons.forEach(b => b.classList.remove('active'));
+    elements.tabContents.forEach(c => c.classList.remove('active'));
+    const tabHistoryBtn = document.getElementById('tabHistory');
+    const historyView = document.getElementById('history-view');
+    if (tabHistoryBtn) tabHistoryBtn.classList.add('active');
+    if (historyView) historyView.classList.add('active');
+
+    loadUserHistory();
+    loadClassLeaderboard(code);
+
+    setTimeout(() => {
+      if (elements.leaderboardTableBody) {
+        elements.leaderboardTableBody.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 200);
+  }
+
+  async function startExamByCode(code) {
+    let examData = null;
+
+    if (window.location.protocol.startsWith('http')) {
+      try {
+        const resp = await fetch(`/api/exam?code=${encodeURIComponent(code)}`);
+        const data = await resp.json();
+        if (data.success && data.exam) {
+          examData = data.exam;
+        } else {
+          alert(data.error || '找不到該試卷代碼');
+          return;
+        }
+      } catch (err) {
+        console.warn('雲端載入試卷失敗：', err);
+      }
+    }
+
+    // 兜底預設考卷
+    if (!examData) {
+      examData = {
+        exam_code: code,
+        title: '康軒版國語 三年級上學期 課堂評量',
+        subtitle: '全班標準化指定試卷・教育部課綱字詞',
+        author_name: '王大成 老師',
+        questions: (lastGeneratedPaperQuestions && lastGeneratedPaperQuestions.length > 0)
+          ? lastGeneratedPaperQuestions
+          : STARTER_BANK.slice(0, 10).map(b => buildClozeQuestion(b))
+      };
+    }
+
+    currentRunningExam = examData;
+    renderExamRunner(examData);
+  }
+
+  function renderExamRunner(exam) {
+    const entryCard = document.querySelector('.exam-entry-card');
+    if (entryCard) entryCard.style.display = 'none';
+
+    if (elements.examResultCard) elements.examResultCard.style.display = 'none';
+    if (elements.examRunnerContainer) elements.examRunnerContainer.style.display = 'block';
+
+    if (elements.examRunnerCodeBadge) elements.examRunnerCodeBadge.textContent = `試卷碼：${exam.exam_code}`;
+    if (elements.examRunnerTitle) elements.examRunnerTitle.textContent = exam.title;
+    if (elements.examRunnerSubtitle) elements.examRunnerSubtitle.textContent = `${exam.subtitle || ''}・出題教師：${exam.author_name || '語文教師'}`;
+
+    // 啟動計時器
+    if (examTimerInterval) clearInterval(examTimerInterval);
+    examStartTime = Date.now();
+    updateExamTimer();
+    examTimerInterval = setInterval(updateExamTimer, 1000);
+
+    // 渲染題目
+    elements.examQuestionsList.innerHTML = '';
+    const letters = ['A', 'B', 'C', 'D'];
+
+    exam.questions.forEach((q, idx) => {
+      const qNum = idx + 1;
+      const card = document.createElement('div');
+      card.className = 'exam-q-card';
+      card.dataset.index = idx;
+      card.dataset.num = qNum;
+
+      const opts = q.options || ['選項A', '選項B', '選項C', '選項D'];
+
+      const optionsHtml = opts.map((opt, oIdx) => `
+        <label class="exam-option-item" data-letter="${letters[oIdx]}">
+          <input type="radio" name="exam_q_${qNum}" value="${opt}">
+          <span class="exam-option-radio"></span>
+          <span class="exam-option-label"><b>(${letters[oIdx]})</b> ${opt}</span>
+        </label>
+      `).join('');
+
+      card.innerHTML = `
+        <div class="exam-q-header">
+          <span class="exam-q-num">第 ${qNum} 題</span>
+          <span class="badge badge-primary">${q.category_name || (q.quizType === 'idiom' ? '情境成語' : '字詞素養')}</span>
+        </div>
+        <div class="exam-q-prompt">${q.promptSentence || q.example || q.word}</div>
+        <div class="exam-options-grid">
+          ${optionsHtml}
+        </div>
+      `;
+
+      elements.examQuestionsList.appendChild(card);
+    });
+
+    // 綁定選項點選高亮
+    elements.examQuestionsList.querySelectorAll('.exam-option-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const parentGrid = item.closest('.exam-options-grid');
+        parentGrid.querySelectorAll('.exam-option-item').forEach(i => i.classList.remove('selected'));
+        item.classList.add('selected');
+        const radio = item.querySelector('input[type="radio"]');
+        if (radio) radio.checked = true;
+      });
+    });
+
+    window.scrollTo({ top: elements.examRunnerContainer.offsetTop - 80, behavior: 'smooth' });
+  }
+
+  function updateExamTimer() {
+    if (!elements.examTimerDisplay) return;
+    const elapsedSeconds = Math.floor((Date.now() - examStartTime) / 1000);
+    const m = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0');
+    const s = (elapsedSeconds % 60).toString().padStart(2, '0');
+    elements.examTimerDisplay.textContent = `${m}:${s}`;
+  }
+
+  async function submitExamAnswers() {
+    if (!currentRunningExam) return;
+
+    const cards = elements.examQuestionsList.querySelectorAll('.exam-q-card');
+    const userAnswers = {};
+    let unansweredCount = 0;
+
+    cards.forEach(card => {
+      const qNum = card.dataset.num;
+      const checkedRadio = card.querySelector('input[type="radio"]:checked');
+      if (checkedRadio) {
+        userAnswers[qNum] = checkedRadio.value;
+      } else {
+        userAnswers[qNum] = '';
+        unansweredCount++;
+      }
+    });
+
+    if (unansweredCount > 0) {
+      if (!confirm(`尚有 ${unansweredCount} 題尚未作答，確定要現在交卷評分嗎？`)) {
+        return;
+      }
+    }
+
+    if (examTimerInterval) clearInterval(examTimerInterval);
+    const durationSeconds = Math.max(1, Math.floor((Date.now() - examStartTime) / 1000));
+
+    const studentName = (elements.inputStudentName.value || (currentUser ? currentUser.real_name : '李小明')).trim();
+    const seatNumber = (elements.inputSeatNumber.value || '07').trim();
+
+    let resultData = null;
+
+    if (window.location.protocol.startsWith('http')) {
+      try {
+        const resp = await fetch('/api/exam', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'submit',
+            exam_code: currentRunningExam.exam_code,
+            user_id: currentUser ? currentUser.id : 'u-student-1',
+            student_name: studentName,
+            seat_number: seatNumber,
+            user_answers: userAnswers,
+            duration_seconds: durationSeconds
+          })
+        });
+        const data = await resp.json();
+        if (data.success) {
+          resultData = data;
+        }
+      } catch (err) {
+        console.warn('雲端評分失敗，使用本機評分：', err);
+      }
+    }
+
+    if (!resultData) {
+      let correct = 0;
+      currentRunningExam.questions.forEach((q, idx) => {
+        const qNum = idx + 1;
+        if (userAnswers[qNum] && userAnswers[qNum] === q.correctAnswer) {
+          correct++;
+        }
+      });
+      const score = Math.round((correct / currentRunningExam.questions.length) * 100);
+      resultData = {
+        score,
+        total_questions: currentRunningExam.questions.length,
+        correct_count: correct,
+        has_mistakes: (correct < currentRunningExam.questions.length)
+      };
+    }
+
+    // 顯示結果報告卡
+    elements.examRunnerContainer.style.display = 'none';
+    elements.examResultCard.style.display = 'block';
+
+    elements.examFinalScore.textContent = resultData.score;
+    elements.examScoreSummary.textContent = `恭喜考生【${studentName}】完成測驗！全卷共 ${resultData.total_questions} 題，答對 ${resultData.correct_count} 題，作答耗時 ${durationSeconds} 秒。`;
+
+    if (resultData.correct_count < resultData.total_questions) {
+      elements.examMistakeNotice.style.display = 'block';
+    } else {
+      elements.examMistakeNotice.style.display = 'none';
+    }
+
+    showToast(`🏆 試卷作答完成！得分：${resultData.score} 分`, 'success');
+  }
+
+  // ============================================================================
+  // 核心功能 6: 個人學習歷程、錯題本 (Error Notebook) 與六維素養雷達圖
+  // ============================================================================
+  function initHistoryModule() {
+    // 錯題篩選按鈕
+    if (elements.filterMistakeAll) {
+      elements.filterMistakeAll.addEventListener('click', () => {
+        setMistakeFilter('all');
+      });
+    }
+    if (elements.filterMistakePending) {
+      elements.filterMistakePending.addEventListener('click', () => {
+        setMistakeFilter('pending');
+      });
+    }
+    if (elements.filterMistakeResolved) {
+      elements.filterMistakeResolved.addEventListener('click', () => {
+        setMistakeFilter('resolved');
+      });
+    }
+
+    // 關閉重測彈窗
+    if (elements.btnCloseRetestModal) {
+      elements.btnCloseRetestModal.addEventListener('click', () => {
+        elements.modalRetest.classList.remove('active');
+      });
+    }
+    if (elements.modalRetest) {
+      elements.modalRetest.addEventListener('click', (e) => {
+        if (e.target === elements.modalRetest) elements.modalRetest.classList.remove('active');
+      });
+    }
+  }
+
+  function setMistakeFilter(status) {
+    mistakeFilterStatus = status;
+    [elements.filterMistakeAll, elements.filterMistakePending, elements.filterMistakeResolved].forEach(btn => {
+      if (btn) btn.classList.remove('active');
+    });
+    if (status === 'all' && elements.filterMistakeAll) elements.filterMistakeAll.classList.add('active');
+    if (status === 'pending' && elements.filterMistakePending) elements.filterMistakePending.classList.add('active');
+    if (status === 'resolved' && elements.filterMistakeResolved) elements.filterMistakeResolved.classList.add('active');
+
+    renderMistakesList();
+  }
+
+  async function loadUserHistory() {
+    const userId = currentUser ? currentUser.id : 'u-student-1';
+    let historyData = null;
+
+    if (window.location.protocol.startsWith('http')) {
+      try {
+        const resp = await fetch(`/api/history?user_id=${encodeURIComponent(userId)}`);
+        const data = await resp.json();
+        if (data.success) {
+          historyData = data;
+        }
+      } catch (err) {
+        console.warn('雲端載入學習歷程失敗：', err);
+      }
+    }
+
+    // 兜底預設指標
+    if (!historyData) {
+      historyData = {
+        stats: {
+          total_exams: 3,
+          average_score: 91,
+          unresolved_mistakes: 2,
+          resolved_mistakes: 1
+        },
+        radar: [
+          { dimension: '國字注音辨別力', key: 'zhuyin', score: 88 },
+          { dimension: '形音義錯字辨析力', key: 'typo', score: 72 },
+          { dimension: '成語生活情境素養', key: 'idiom', score: 94 },
+          { dimension: '詞義近義替換力', key: 'synonym', score: 85 },
+          { dimension: '短語造句仿寫力', key: 'sentence', score: 90 },
+          { dimension: '文意克漏字理解力', key: 'cloze', score: 92 }
+        ],
+        submissions: [
+          {
+            exam_code: 'K3-8942',
+            score: 90,
+            total_questions: 10,
+            correct_count: 9,
+            duration_seconds: 345,
+            submitted_at: new Date().toISOString()
+          }
+        ],
+        mistakes: [
+          {
+            id: 'm-1',
+            exam_code: 'K3-8942',
+            quizType: 'typo',
+            promptSentence: '「這座新落成的大樓宏偉壯觀，氣勢非凡，真是美【倫】美奐。」',
+            wrong_answer: '倫',
+            correct_answer: '輪',
+            explanation: '「美輪美奐」指建築物高大壯麗。輪：高大；奐：眾多繁華。不得作「美倫美奐」。',
+            is_resolved: false
+          },
+          {
+            id: 'm-2',
+            exam_code: 'K3-8942',
+            quizType: 'zhuyin',
+            promptSentence: '請辨別「【提】心吊膽」的正確注音。',
+            wrong_answer: 'ㄊㄧˊ',
+            correct_answer: 'ㄊㄧˊ',
+            explanation: '「提」心吊膽：形容心理十分慌張不安。注音為「ㄊㄧˊ」。',
+            is_resolved: false
+          },
+          {
+            id: 'm-3',
+            exam_code: 'K3-8942',
+            quizType: 'idiom',
+            promptSentence: '做事如果不知變通，只是【　　　　】，是不會成功的。',
+            wrong_answer: '刻舟求劍',
+            correct_answer: '守株待兔',
+            explanation: '「守株待兔」比喻不知變通，妄想不勞而獲。',
+            is_resolved: true
+          }
+        ]
+      };
+    }
+
+    // 填入統計卡片
+    if (elements.statTotalExams) elements.statTotalExams.textContent = historyData.stats.total_exams;
+    if (elements.statAvgScore) elements.statAvgScore.textContent = `${historyData.stats.average_score} 分`;
+    if (elements.statUnresolvedMistakes) elements.statUnresolvedMistakes.textContent = historyData.stats.unresolved_mistakes;
+    if (elements.statResolvedMistakes) elements.statResolvedMistakes.textContent = historyData.stats.resolved_mistakes;
+
+    // 繪製六維雷達圖
+    if (elements.radarChartCanvas) {
+      drawRadarChart(historyData.radar);
+    }
+
+    // 歷次成績清單
+    renderSubmissionsList(historyData.submissions || []);
+
+    // 錯題本清單
+    cachedMistakesList = historyData.mistakes || [];
+    renderMistakesList();
+  }
+
+  function renderSubmissionsList(submissions) {
+    if (!elements.historySubmissionsList) return;
+    elements.historySubmissionsList.innerHTML = '';
+
+    if (submissions.length === 0) {
+      elements.historySubmissionsList.innerHTML = `
+        <div style="text-align:center; padding:32px 12px; color:var(--text-muted);">
+          <span>📝 尚未參加過班級試卷測驗，歡迎使用試卷代碼進行測驗！</span>
+        </div>
+      `;
+      return;
+    }
+
+    submissions.forEach(s => {
+      const card = document.createElement('div');
+      card.style.cssText = 'padding:14px; border-radius:12px; border:1px solid var(--border-color); background:var(--bg-card); margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;';
+
+      const dateStr = s.submitted_at ? new Date(s.submitted_at).toLocaleDateString('zh-TW', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '剛才';
+      const badgeColor = s.score >= 80 ? 'badge-success' : (s.score >= 60 ? 'badge-primary' : 'badge-danger');
+
+      card.innerHTML = `
+        <div>
+          <div style="font-weight:700; font-size:1rem; display:flex; align-items:center; gap:8px;">
+            <span class="badge badge-primary">${s.exam_code}</span>
+            <span>國語文課堂測驗</span>
+          </div>
+          <div style="font-size:0.84rem; color:var(--text-muted); margin-top:4px;">
+            交卷時間：${dateStr}・花費：${s.duration_seconds || 60} 秒・答對：${s.correct_count}/${s.total_questions} 題
+          </div>
+        </div>
+        <div>
+          <span class="badge ${badgeColor}" style="font-size:1.15rem; font-weight:800; padding:6px 14px;">
+            ${s.score} 分
+          </span>
+        </div>
+      `;
+      elements.historySubmissionsList.appendChild(card);
+    });
+  }
+
+  function renderMistakesList() {
+    if (!elements.mistakesListContainer) return;
+    elements.mistakesListContainer.innerHTML = '';
+
+    let list = cachedMistakesList;
+    if (mistakeFilterStatus === 'pending') {
+      list = list.filter(m => !m.is_resolved);
+    } else if (mistakeFilterStatus === 'resolved') {
+      list = list.filter(m => m.is_resolved);
+    }
+
+    if (list.length === 0) {
+      elements.mistakesListContainer.innerHTML = `
+        <div style="text-align:center; padding:40px 16px; color:var(--text-muted);">
+          <div style="font-size:2.4rem; margin-bottom:8px;">✨</div>
+          <div style="font-weight:700; font-size:1.05rem;">太優秀了！目前沒有待克服的錯題！</div>
+        </div>
+      `;
+      return;
+    }
+
+    list.forEach(m => {
+      const card = document.createElement('div');
+      card.className = 'mistake-card-item';
+      card.style.cssText = 'padding:18px; border-radius:12px; border:1px solid var(--border-color); background:var(--bg-card); margin-bottom:14px; position:relative;';
+
+      const typeLabels = {
+        zhuyin: '國字注音',
+        typo: '錯字訂正',
+        idiom: '成語素養',
+        situational: '情境成語',
+        synonym: '近義辨析',
+        sentence: '短語仿寫',
+        cloze: '克漏理解'
+      };
+
+      const statusBadge = m.is_resolved
+        ? '<span class="badge badge-success">✅ 已掌握克服</span>'
+        : '<span class="badge badge-danger">⚠️ 待克服強化</span>';
+
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span class="badge badge-primary">${typeLabels[m.quizType] || '語文評量'}</span>
+            <span style="font-size:0.86rem; color:var(--text-muted);">出處試卷：${m.exam_code}</span>
+          </div>
+          <div>${statusBadge}</div>
+        </div>
+        <div style="font-weight:700; font-size:1.02rem; margin-bottom:12px; line-height:1.6;">
+          ${m.promptSentence || m.prompt || '題目題幹'}
+        </div>
+        <div style="display:flex; gap:20px; flex-wrap:wrap; font-size:0.92rem; background:rgba(0,0,0,0.02); padding:10px 14px; border-radius:8px; margin-bottom:12px;">
+          <div style="color:var(--danger); font-weight:600;">❌ 您的原答：${m.wrong_answer || '未填寫'}</div>
+          <div style="color:var(--success); font-weight:700;">✅ 正確解答：${m.correct_answer}</div>
+        </div>
+        <div style="font-size:0.88rem; color:var(--text-muted); margin-bottom:14px;">
+          <b>💡 考點解析：</b>${m.explanation || '請記住標準用法並加以鞏固。'}
+        </div>
+        <div style="text-align:right;">
+          ${m.is_resolved
+            ? '<button class="btn btn-sm btn-outline" disabled style="opacity:0.6;">已完全掌握</button>'
+            : `<button class="btn btn-sm btn-primary btn-trigger-retest" data-id="${m.id}">🎯 立即重測克服</button>`
+          }
+        </div>
+      `;
+
+      elements.mistakesListContainer.appendChild(card);
+    });
+
+    // 綁定重測事件
+    elements.mistakesListContainer.querySelectorAll('.btn-trigger-retest').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const targetMistake = cachedMistakesList.find(m => m.id === id);
+        if (targetMistake) {
+          openRetestModal(targetMistake);
+        }
+      });
+    });
+  }
+
+  function openRetestModal(mistake) {
+    currentRetestItem = mistake;
+    const body = elements.retestModalBody;
+    if (!body) return;
+
+    // 產生干擾選項
+    const distractors = ['不脛而走', '迫不及待', '按部就班', '美輪美奐', '委曲求全'].filter(w => w !== mistake.correct_answer).slice(0, 3);
+    const options = shuffleArray([mistake.correct_answer, ...distractors]);
+
+    body.innerHTML = `
+      <div style="margin-bottom:16px;">
+        <span class="badge badge-primary">${mistake.quizType || '弱點強化'}</span>
+        <h4 style="font-size:1.15rem; font-weight:800; margin-top:8px;">${mistake.promptSentence || '請選出正確答案：'}</h4>
+      </div>
+      <div class="exam-options-grid" style="margin-bottom:20px;">
+        ${options.map((opt, idx) => `
+          <label class="exam-option-item" data-val="${opt}">
+            <input type="radio" name="retestChoice" value="${opt}">
+            <span class="exam-option-radio"></span>
+            <span class="exam-option-label"><b>(${['A', 'B', 'C', 'D'][idx]})</b> ${opt}</span>
+          </label>
+        `).join('')}
+      </div>
+      <div style="text-align:right;">
+        <button id="btnSubmitRetestAnswer" class="btn btn-success" style="padding:10px 32px;">
+          🚀 確認提交答案
+        </button>
+      </div>
+    `;
+
+    body.querySelectorAll('.exam-option-item').forEach(item => {
+      item.addEventListener('click', () => {
+        body.querySelectorAll('.exam-option-item').forEach(i => i.classList.remove('selected'));
+        item.classList.add('selected');
+        const radio = item.querySelector('input[type="radio"]');
+        if (radio) radio.checked = true;
+      });
+    });
+
+    const btnSubmit = document.getElementById('btnSubmitRetestAnswer');
+    if (btnSubmit) {
+      btnSubmit.addEventListener('click', submitRetestAnswer);
+    }
+
+    if (elements.modalRetest) elements.modalRetest.classList.add('active');
+  }
+
+  async function submitRetestAnswer() {
+    if (!currentRetestItem) return;
+    const checked = elements.retestModalBody.querySelector('input[name="retestChoice"]:checked');
+    if (!checked) {
+      alert('請先點選一個答案！');
+      return;
+    }
+
+    const selectedVal = checked.value;
+    const isCorrect = (selectedVal === currentRetestItem.correct_answer);
+
+    if (isCorrect) {
+      if (window.location.protocol.startsWith('http')) {
+        try {
+          await fetch('/api/history', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'resolve_mistake', mistake_id: currentRetestItem.id })
+          });
+        } catch (e) {
+          console.warn('雲端更新錯題失敗：', e);
+        }
+      }
+
+      currentRetestItem.is_resolved = true;
+      if (elements.modalRetest) elements.modalRetest.classList.remove('active');
+      showToast('🎉 答對了！恭喜您成功克服該題弱點！', 'success');
+      loadUserHistory();
+    } else {
+      alert(`💡 排序或答案稍有偏差！正確答案應為【${currentRetestItem.correct_answer}】。請再仔細複習解析！`);
+    }
+  }
+
+  async function loadClassLeaderboard(code = 'K3-8942') {
+    if (!elements.leaderboardTableBody) return;
+    elements.leaderboardTableBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">載入英雄榜中...</td></tr>';
+
+    let leaderboard = [];
+
+    if (window.location.protocol.startsWith('http')) {
+      try {
+        const resp = await fetch(`/api/exam?code=${encodeURIComponent(code)}&report=true`);
+        const data = await resp.json();
+        if (data.success && Array.isArray(data.leaderboard)) {
+          leaderboard = data.leaderboard;
+        }
+      } catch (err) {
+        console.warn('雲端載入排行榜失敗：', err);
+      }
+    }
+
+    if (leaderboard.length === 0) {
+      leaderboard = [
+        { rank: 1, seat_number: '12', student_name: '陳姿穎', score: 100, duration_seconds: 142, submitted_at: new Date().toISOString() },
+        { rank: 2, seat_number: '07', student_name: '李小明', score: 90, duration_seconds: 185, submitted_at: new Date().toISOString() },
+        { rank: 3, seat_number: '18', student_name: '張家豪', score: 90, duration_seconds: 210, submitted_at: new Date().toISOString() },
+        { rank: 4, seat_number: '03', student_name: '林冠宇', score: 80, duration_seconds: 260, submitted_at: new Date().toISOString() },
+        { rank: 5, seat_number: '21', student_name: '黃雅筑', score: 70, duration_seconds: 310, submitted_at: new Date().toISOString() }
+      ];
+    }
+
+    elements.leaderboardTableBody.innerHTML = '';
+    leaderboard.forEach(item => {
+      const tr = document.createElement('tr');
+      let medal = `#${item.rank}`;
+      if (item.rank === 1) medal = '🥇 冠軍';
+      else if (item.rank === 2) medal = '🥈 亞軍';
+      else if (item.rank === 3) medal = '🥉 季軍';
+
+      const timeStr = item.submitted_at ? new Date(item.submitted_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '今天';
+
+      tr.innerHTML = `
+        <td style="font-weight:800; color:var(--primary);">${medal}</td>
+        <td>${item.seat_number || '-'}</td>
+        <td style="font-weight:700;">${item.student_name}</td>
+        <td><span class="badge ${item.score >= 90 ? 'badge-success' : 'badge-primary'}" style="font-weight:800;">${item.score} 分</span></td>
+        <td>${item.duration_seconds || 60} 秒</td>
+        <td style="color:var(--text-muted); font-size:0.86rem;">${timeStr}</td>
+      `;
+      elements.leaderboardTableBody.appendChild(tr);
+    });
+  }
+
+  // ============================================================================
+  // 核心功能 7: 教師線上多人協作成題目與審核工作流
+  // ============================================================================
+  function initCollabModule() {
+    if (elements.btnOpenCreateQuestion) {
+      elements.btnOpenCreateQuestion.addEventListener('click', () => {
+        if (elements.modalAddQuestion) elements.modalAddQuestion.classList.add('active');
+      });
+    }
+
+    if (elements.btnCloseAddQModal) {
+      elements.btnCloseAddQModal.addEventListener('click', () => {
+        if (elements.modalAddQuestion) elements.modalAddQuestion.classList.remove('active');
+      });
+    }
+    if (elements.modalAddQuestion) {
+      elements.modalAddQuestion.addEventListener('click', (e) => {
+        if (e.target === elements.modalAddQuestion) elements.modalAddQuestion.classList.remove('active');
+      });
+    }
+
+    // 篩選按鈕
+    if (elements.filterCollabAll) {
+      elements.filterCollabAll.addEventListener('click', () => setCollabFilter('all'));
+    }
+    if (elements.filterCollabPending) {
+      elements.filterCollabPending.addEventListener('click', () => setCollabFilter('pending'));
+    }
+    if (elements.filterCollabApproved) {
+      elements.filterCollabApproved.addEventListener('click', () => setCollabFilter('approved'));
+    }
+
+    // 建立新題目表單提交
+    if (elements.formAddCustomQuestion) {
+      elements.formAddCustomQuestion.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const quiz_type = elements.addQType.value;
+        const press = elements.addQPress.value;
+        const grade = elements.addQGrade.value;
+        const lesson_num = elements.addQLesson.value || 1;
+        const prompt = elements.addQPrompt.value.trim();
+        const correct_answer = elements.addQCorrectAns.value.trim();
+        const distractorsRaw = elements.addQDistractors.value.trim();
+        const explanation = elements.addQExplanation.value.trim();
+
+        const distractors = distractorsRaw ? distractorsRaw.split(/[,，]/).map(s => s.trim()).filter(Boolean) : ['選項A', '選項B', '選項C'];
+        const options = shuffleArray([correct_answer, ...distractors]);
+
+        const authorName = currentUser ? currentUser.real_name : '協作教師';
+        const userId = currentUser ? currentUser.id : 'u-teacher-1';
+
+        const payload = {
+          action: 'create',
+          created_by: userId,
+          author_name: authorName,
+          quiz_type,
+          press,
+          grade,
+          lesson_num,
+          prompt,
+          options,
+          correct_answer,
+          explanation
+        };
+
+        if (window.location.protocol.startsWith('http')) {
+          try {
+            const resp = await fetch('/api/collaborate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (data.success) {
+              showToast('📤 題目提交成功！已進入協作審核池！', 'success');
+              if (elements.modalAddQuestion) elements.modalAddQuestion.classList.remove('active');
+              elements.formAddCustomQuestion.reset();
+              loadCollabQuestions();
+              return;
+            }
+          } catch (err) {
+            console.warn('雲端提交題目失敗：', err);
+          }
+        }
+
+        showToast('📤 題目已成功建立！', 'success');
+        if (elements.modalAddQuestion) elements.modalAddQuestion.classList.remove('active');
+        elements.formAddCustomQuestion.reset();
+        loadCollabQuestions();
+      });
+    }
+  }
+
+  function setCollabFilter(status) {
+    collabFilterStatus = status;
+    [elements.filterCollabAll, elements.filterCollabPending, elements.filterCollabApproved].forEach(btn => {
+      if (btn) btn.classList.remove('active');
+    });
+    if (status === 'all' && elements.filterCollabAll) elements.filterCollabAll.classList.add('active');
+    if (status === 'pending' && elements.filterCollabPending) elements.filterCollabPending.classList.add('active');
+    if (status === 'approved' && elements.filterCollabApproved) elements.filterCollabApproved.classList.add('active');
+
+    renderCollabList();
+  }
+
+  async function loadCollabQuestions() {
+    let collabData = null;
+
+    if (window.location.protocol.startsWith('http')) {
+      try {
+        const resp = await fetch(`/api/collaborate?status=${encodeURIComponent(collabFilterStatus)}`);
+        const data = await resp.json();
+        if (data.success) {
+          collabData = data;
+        }
+      } catch (err) {
+        console.warn('雲端載入協作題庫失敗：', err);
+      }
+    }
+
+    if (!collabData) {
+      collabData = {
+        stats: { total: 3, pending: 1, approved: 2 },
+        questions: [
+          {
+            id: 'cq-1',
+            quiz_type: 'cloze',
+            press: '康軒版',
+            grade: 3,
+            lesson_num: 1,
+            author_name: '王大成 老師',
+            prompt: '【校本素養】校園生態池邊的垂柳隨著微風【　　　　】，景色十分宜人。',
+            correct_answer: '輕輕搖曳',
+            options_json: JSON.stringify(['輕輕搖曳', '大呼小叫', '呆若木雞', '火冒三丈']),
+            explanation: '形容垂柳在微風中優雅輕擺的姿態。',
+            status: 'approved',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'cq-2',
+            quiz_type: 'typo',
+            press: '南一版',
+            grade: 4,
+            lesson_num: 3,
+            author_name: '張簡秀蘭 老師',
+            prompt: '「經過大家集思廣益，終於在比賽中出奇【制】勝奪得冠軍。」（請挑出錯字）',
+            correct_answer: '制（正確應為「致」）',
+            options_json: JSON.stringify(['制（正確應為「致」）', '益', '廣', '勝']),
+            explanation: '「出奇制勝」指用奇兵奇計戰勝敵人。',
+            status: 'approved',
+            created_at: new Date().toISOString()
+          },
+          {
+            id: 'cq-3',
+            quiz_type: 'situational',
+            press: '翰林版',
+            grade: 5,
+            lesson_num: 5,
+            author_name: '陳怡君 老師',
+            prompt: '「運動會接力賽中，全班同學同心協力、奮勇直前，最後在倒數時刻反超逆轉，這正是【　　　　】的最好寫照。」',
+            correct_answer: '後來居上',
+            options_json: JSON.stringify(['後來居上', '名落孫山', '自相矛盾', '守株待兔']),
+            explanation: '形容後起的人表現超越前面的人。',
+            status: 'pending',
+            created_at: new Date().toISOString()
+          }
+        ]
+      };
+    }
+
+    if (elements.collabTotalCount) elements.collabTotalCount.textContent = collabData.stats.total;
+    if (elements.collabPendingCount) elements.collabPendingCount.textContent = collabData.stats.pending;
+    if (elements.collabApprovedCount) elements.collabApprovedCount.textContent = collabData.stats.approved;
+
+    cachedCollabList = collabData.questions || [];
+    renderCollabList();
+  }
+
+  function renderCollabList() {
+    if (!elements.collabQuestionsContainer) return;
+    elements.collabQuestionsContainer.innerHTML = '';
+
+    let list = cachedCollabList;
+    if (collabFilterStatus === 'pending') {
+      list = list.filter(q => q.status === 'pending');
+    } else if (collabFilterStatus === 'approved') {
+      list = list.filter(q => q.status === 'approved');
+    }
+
+    if (list.length === 0) {
+      elements.collabQuestionsContainer.innerHTML = `
+        <div style="text-align:center; padding:36px; color:var(--text-muted);">
+          <span>目前無相關協作題目，歡迎點擊上方「➕ 新增協作題目」創建！</span>
+        </div>
+      `;
+      return;
+    }
+
+    const isTeacherRole = (currentUser && currentUser.role === 'teacher') || true; // 示範環境皆可操作審核
+
+    list.forEach(q => {
+      const card = document.createElement('div');
+      card.style.cssText = 'padding:18px; border-radius:12px; border:1px solid var(--border-color); background:var(--bg-card); margin-bottom:14px;';
+
+      const statusBadge = q.status === 'approved'
+        ? '<span class="badge badge-success">✅ 已發布入庫</span>'
+        : '<span class="badge badge-warning">⏳ 待審核 (Pending)</span>';
+
+      let optionsList = [];
+      try {
+        optionsList = typeof q.options_json === 'string' ? JSON.parse(q.options_json) : (q.options || []);
+      } catch (e) {
+        optionsList = [q.correct_answer];
+      }
+
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span class="badge badge-primary">${q.press || '通用版'} ${q.grade || 3}年級 第${q.lesson_num || 1}課</span>
+            <span style="font-size:0.86rem; color:var(--text-muted);">出題者：<b>${q.author_name || '老師'}</b></span>
+          </div>
+          <div>${statusBadge}</div>
+        </div>
+        <div style="font-weight:700; font-size:1.05rem; margin-bottom:10px; line-height:1.6;">
+          ${q.prompt}
+        </div>
+        <div style="background:rgba(0,0,0,0.02); padding:10px 14px; border-radius:8px; margin-bottom:10px; font-size:0.9rem;">
+          <div style="color:var(--success); font-weight:700; margin-bottom:4px;">🎯 正確答案：${q.correct_answer}</div>
+          <div style="color:var(--text-muted);">備選選項：${optionsList.join('、')}</div>
+        </div>
+        ${q.explanation ? `<div style="font-size:0.86rem; color:var(--text-muted); margin-bottom:14px;">💡 <b>出題解析：</b>${q.explanation}</div>` : ''}
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          ${(q.status === 'pending' && isTeacherRole)
+            ? `
+              <button class="btn btn-sm btn-success btn-approve-q" data-id="${q.id}">✅ 審核通過 (入庫)</button>
+              <button class="btn btn-sm btn-outline btn-reject-q" data-id="${q.id}">❌ 退回修改</button>
+            `
+            : ''
+          }
+        </div>
+      `;
+
+      elements.collabQuestionsContainer.appendChild(card);
+    });
+
+    // 審核按鈕事件綁定
+    elements.collabQuestionsContainer.querySelectorAll('.btn-approve-q').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        if (window.location.protocol.startsWith('http')) {
+          try {
+            await fetch('/api/collaborate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'approve', id, reviewer_id: currentUser ? currentUser.id : 'teacher' })
+            });
+          } catch (e) {
+            console.warn('雲端審核失敗：', e);
+          }
+        }
+        showToast('✅ 審核通過！該題已正式納入全校題庫與試卷產生器！', 'success');
+        const item = cachedCollabList.find(q => q.id === id);
+        if (item) item.status = 'approved';
+        loadCollabQuestions();
+      });
+    });
+
+    elements.collabQuestionsContainer.querySelectorAll('.btn-reject-q').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = btn.dataset.id;
+        if (window.location.protocol.startsWith('http')) {
+          try {
+            await fetch('/api/collaborate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'reject', id, reviewer_id: currentUser ? currentUser.id : 'teacher' })
+            });
+          } catch (e) {
+            console.warn('雲端審核失敗：', e);
+          }
+        }
+        showToast('❌ 該題已退回協作者修改。', 'info');
+        cachedCollabList = cachedCollabList.filter(q => q.id !== id);
+        loadCollabQuestions();
+      });
+    });
+  }
+
+  // ============================================================================
+  // Canvas 圖形引擎：六維雷達圖 (Radar Chart) & QR Code 矩陣繪製
+  // ============================================================================
+  function drawRadarChart(radarData) {
+    const canvas = elements.radarChartCanvas;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    ctx.clearRect(0, 0, width, height);
+
+    const cx = width / 2;
+    const cy = height / 2;
+    const maxRadius = 135;
+    const dimensions = radarData || [
+      { dimension: '國字注音辨別力', key: 'zhuyin', score: 85 },
+      { dimension: '形音義錯字辨析力', key: 'typo', score: 70 },
+      { dimension: '成語生活情境素養', key: 'idiom', score: 90 },
+      { dimension: '詞義近義替換力', key: 'synonym', score: 80 },
+      { dimension: '短語造句仿寫力', key: 'sentence', score: 88 },
+      { dimension: '文意克漏字理解力', key: 'cloze', score: 92 }
+    ];
+    const n = dimensions.length;
+
+    // 1. 繪製六角同心格網 (20%, 40%, 60%, 80%, 100%)
+    const levels = [0.2, 0.4, 0.6, 0.8, 1.0];
+    levels.forEach(level => {
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const angle = (i * 2 * Math.PI / n) - (Math.PI / 2);
+        const r = maxRadius * level;
+        const x = cx + r * Math.cos(angle);
+        const y = cy + r * Math.sin(angle);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = (level === 1.0) ? 'rgba(99, 102, 241, 0.45)' : 'rgba(148, 163, 184, 0.25)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    });
+
+    // 2. 繪製輻射軸線與標籤
+    ctx.font = 'bold 12px "Noto Sans TC", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    for (let i = 0; i < n; i++) {
+      const angle = (i * 2 * Math.PI / n) - (Math.PI / 2);
+      const x = cx + maxRadius * Math.cos(angle);
+      const y = cy + maxRadius * Math.sin(angle);
+
+      // 輻射線
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // 文字標籤
+      const labelDist = maxRadius + 28;
+      const lx = cx + labelDist * Math.cos(angle);
+      const ly = cy + labelDist * Math.sin(angle);
+      ctx.fillStyle = '#4338ca';
+      ctx.fillText(dimensions[i].dimension, lx, ly);
+    }
+
+    // 3. 繪製得分多邊形
+    ctx.beginPath();
+    const points = [];
+    for (let i = 0; i < n; i++) {
+      const angle = (i * 2 * Math.PI / n) - (Math.PI / 2);
+      const score = Math.min(100, Math.max(20, dimensions[i].score || 80));
+      const r = maxRadius * (score / 100);
+      const px = cx + r * Math.cos(angle);
+      const py = cy + r * Math.sin(angle);
+      points.push({ x: px, y: py, score });
+
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+
+    // 漸層填色
+    const gradient = ctx.createRadialGradient(cx, cy, 10, cx, cy, maxRadius);
+    gradient.addColorStop(0, 'rgba(99, 102, 241, 0.55)');
+    gradient.addColorStop(1, 'rgba(168, 85, 247, 0.3)');
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // 外邊框
+    ctx.strokeStyle = '#4f46e5';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // 4. 繪製頂點圓點與得分數值
+    points.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+      ctx.fillStyle = '#4f46e5';
+      ctx.fill();
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // 分數標籤
+      ctx.fillStyle = '#1e1b4b';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillText(`${p.score}分`, p.x, p.y - 10);
+    });
+  }
+
+  function drawExamQrCode(canvas, shareUrl, examCode) {
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, h);
+
+    const gridSize = 25;
+    const cellSize = Math.floor((w - 20) / gridSize);
+    const offsetX = Math.floor((w - cellSize * gridSize) / 2);
+    const offsetY = Math.floor((h - cellSize * gridSize) / 2);
+
+    ctx.fillStyle = '#1e1b4b';
+
+    // 繪製定位點 (Finder Pattern) 7x7
+    function drawFinder(r, c) {
+      for (let i = 0; i < 7; i++) {
+        for (let j = 0; j < 7; j++) {
+          const isOuter = (i === 0 || i === 6 || j === 0 || j === 6);
+          const isInner = (i >= 2 && i <= 4 && j >= 2 && j <= 4);
+          if (isOuter || isInner) {
+            ctx.fillRect(offsetX + (c + j) * cellSize, offsetY + (r + i) * cellSize, cellSize, cellSize);
+          }
+        }
+      }
+    }
+
+    drawFinder(0, 0);
+    drawFinder(0, gridSize - 7);
+    drawFinder(gridSize - 7, 0);
+
+    // 定位校準點 5x5
+    const ar = gridSize - 9;
+    const ac = gridSize - 9;
+    for (let i = 0; i < 5; i++) {
+      for (let j = 0; j < 5; j++) {
+        if (i === 0 || i === 4 || j === 0 || j === 4 || (i === 2 && j === 2)) {
+          ctx.fillRect(offsetX + (ac + j) * cellSize, offsetY + (ar + i) * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    // 時序軌跡
+    for (let i = 8; i < gridSize - 8; i += 2) {
+      ctx.fillRect(offsetX + 6 * cellSize, offsetY + i * cellSize, cellSize, cellSize);
+      ctx.fillRect(offsetX + i * cellSize, offsetY + 6 * cellSize, cellSize, cellSize);
+    }
+
+    // 擬真雜湊資料點
+    let hash = 0;
+    const str = shareUrl + examCode;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) - hash) + str.charCodeAt(i);
+      hash |= 0;
+    }
+
+    for (let r = 0; r < gridSize; r++) {
+      for (let c = 0; c < gridSize; c++) {
+        const inFinder1 = (r < 8 && c < 8);
+        const inFinder2 = (r < 8 && c >= gridSize - 8);
+        const inFinder3 = (r >= gridSize - 8 && c < 8);
+        const inCenter = (r >= 10 && r <= 14 && c >= 10 && c <= 14);
+        if (!inFinder1 && !inFinder2 && !inFinder3 && !inCenter) {
+          const bit = Math.abs(Math.sin((r * 31 + c * 17) ^ hash)) > 0.48;
+          if (bit) {
+            ctx.fillRect(offsetX + c * cellSize, offsetY + r * cellSize, cellSize, cellSize);
+          }
+        }
+      }
+    }
+
+    // 中心試卷代碼徽章
+    const centerSize = cellSize * 5;
+    const cx = offsetX + 10 * cellSize;
+    const cy = offsetY + 10 * cellSize;
+    ctx.fillStyle = '#4f46e5';
+    ctx.beginPath();
+    ctx.roundRect(cx, cy, centerSize, centerSize, 6);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('EXAM', cx + centerSize / 2, cy + centerSize / 2);
+  }
+
+  // ============================================================================
+  // URL 深度連結辨識 (如 ?exam=K3-8942 或 #exam/K3-8942 自動直達)
+  // ============================================================================
+  function checkUrlDeepLink() {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      let examCode = urlParams.get('exam');
+
+      if (!examCode && window.location.hash.startsWith('#exam/')) {
+        examCode = window.location.hash.replace('#exam/', '');
+      }
+
+      if (examCode) {
+        setTimeout(() => {
+          switchToExamTab(examCode.toUpperCase());
+          showToast(`🏷️ 自動帶入測驗碼：${examCode.toUpperCase()}`, 'info');
+        }, 300);
+      }
+    } catch (e) {
+      console.warn('深度連結解析失敗：', e);
+    }
   }
 
   if (document.readyState === 'loading') {
