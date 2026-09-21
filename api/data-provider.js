@@ -190,26 +190,39 @@ function loadDataSources() {
     }
   }
 
+  function safeParse(str, fallback) {
+    if (!str) return fallback;
+    try {
+      const clean = str.charCodeAt(0) === 0xFEFF ? str.slice(1) : str;
+      return JSON.parse(clean.trim());
+    } catch (e) {
+      console.error('safeParse JSON error:', e.message);
+      return fallback;
+    }
+  }
+
   // 1. 載入 31,302 筆題庫
   const qBankPath = path.join(dataDir, 'question_bank.json');
   let rawBank = [];
   if (fs.existsSync(qBankPath)) {
     const rawStr = fs.readFileSync(qBankPath, 'utf8');
-    rawBank = JSON.parse(rawStr);
+    rawBank = safeParse(rawStr, []);
   }
 
   // 2. 載入教科書生字詞庫
   const tbPath = path.join(dataDir, 'textbook_data.json');
   let textbookData = { curriculum: {} };
   if (fs.existsSync(tbPath)) {
-    textbookData = JSON.parse(fs.readFileSync(tbPath, 'utf8'));
+    const tbStr = fs.readFileSync(tbPath, 'utf8');
+    textbookData = safeParse(tbStr, { curriculum: {} });
   }
 
   // 3. 載入 150 則成語
   const idPath = path.join(dataDir, 'idiom_list_150.json');
   let idioms150 = [];
   if (fs.existsSync(idPath)) {
-    idioms150 = JSON.parse(fs.readFileSync(idPath, 'utf8'));
+    const idStr = fs.readFileSync(idPath, 'utf8');
+    idioms150 = safeParse(idStr, []);
   }
 
   // 分類與擴充
