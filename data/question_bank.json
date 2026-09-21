@@ -1,4 +1,4 @@
-[
+﻿[
     {
         "id":  "ellipsis-41838",
         "type":  "ellipsis",
@@ -400,7 +400,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【不論…就…】句型語境發揮想像力完成完整造句）",
+        "example":  "不論遇到什麼挫折，我們就應該勇敢面對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -415,7 +415,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【雖然…但…以免…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，雖然遇到任何困難，但應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -445,7 +445,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【沒有…就…】句型語境發揮想像力完成完整造句）",
+        "example":  "沒有辛勤的耕耘，就沒有豐碩的收穫。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -490,7 +490,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【為了…必須…】句型語境發揮想像力完成完整造句）",
+        "example":  "為了達成團隊目標，每個人必須各司其職全力以赴。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -505,7 +505,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【連…更…】句型語境發揮想像力完成完整造句）",
+        "example":  "連平日內向的同學都踴躍發言，其他人更是熱情投入。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -565,7 +565,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【不但可以…也可以…】句型語境發揮想像力完成完整造句）",
+        "example":  "這座公園不但可以散步健身，也可以欣賞美麗的花草景致。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -580,7 +580,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【以…為例…】句型語境發揮想像力完成完整造句）",
+        "example":  "以小明的學習態度為例，正是大家值得效法的好榜樣。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -595,7 +595,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【不論…只要…】句型語境發揮想像力完成完整造句）",
+        "example":  "不論難度多高，只要按部就班便能迎刃而解。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -625,7 +625,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【既是…也是…】句型語境發揮想像力完成完整造句）",
+        "example":  "這部小說既是一部冒險故事，也是深刻的人生啟示。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -640,7 +640,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【是因為…還以為…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，是因為遇到任何困難，還以為應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -655,7 +655,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【為了…不知…也不知…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，為了遇到任何困難，不知應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -670,7 +670,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【為了…不是…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，為了遇到任何困難，不是應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -685,7 +685,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【即使…卻…】句型語境發揮想像力完成完整造句）",
+        "example":  "即使天氣十分寒冷，他心中卻充滿了對未來的熱情。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -700,7 +700,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【他的…因為…所以…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，他的遇到任何困難，因為應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -715,7 +715,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【不知所措…不過…】句型語境發揮想像力完成完整造句）",
+        "example":  "他起初顯得有些不知所措，不過很快便冷靜地解決了問題。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -730,7 +730,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【不僅…而且…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，不僅遇到任何困難，而且應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -745,7 +745,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【不但…更是…】句型語境發揮想像力完成完整造句）",
+        "example":  "運動不但能強健體魄，更是培養堅毅意志的重要途徑。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -760,7 +760,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【有…就有…】句型語境發揮想像力完成完整造句）",
+        "example":  "有明確的目標與方向，就有前進的強大動力。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -790,7 +790,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【以前…現代…於是…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，以前遇到任何困難，現代應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -805,7 +805,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【先是…幾週後…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，先是遇到任何困難，幾週後應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -823,21 +823,6 @@
         "example":  "不論是大水滴或是小水滴，都是河川不可或缺的一分子。",
         "difficulty":  "junior_high",
         "is_stub":  false
-    },
-    {
-        "id":  "ellipsis-39900",
-        "type":  "ellipsis",
-        "category_name":  "句型練習",
-        "word":  "…到底有多…",
-        "title":  "…到底有多…",
-        "pattern":  "…到底有多…",
-        "zhuyin":  "",
-        "synonyms":  "",
-        "antonyms":  "",
-        "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【…到底有多…】句型語境發揮想像力完成完整造句）",
-        "difficulty":  "junior_high",
-        "is_stub":  true
     },
     {
         "id":  "ellipsis-39850",
@@ -1000,7 +985,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【一…立刻…】句型語境發揮想像力完成完整造句）",
+        "example":  "老師一走進教室，全班同學立刻安靜下來準備上課。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1030,7 +1015,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【倘若…只怕…】句型語境發揮想像力完成完整造句）",
+        "example":  "倘若現在不加緊練習，只怕正式演出時會手忙腳亂。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1045,22 +1030,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【愈…愈…】句型語境發揮想像力完成完整造句）",
-        "difficulty":  "junior_high",
-        "is_stub":  true
-    },
-    {
-        "id":  "ellipsis-39215",
-        "type":  "ellipsis",
-        "category_name":  "句型練習",
-        "word":  "…又…",
-        "title":  "…又…",
-        "pattern":  "…又…",
-        "zhuyin":  "",
-        "synonyms":  "",
-        "antonyms":  "",
-        "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【…又…】句型語境發揮想像力完成完整造句）",
+        "example":  "隨著登山高度愈來愈高，山間的風景也愈來愈壯麗。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1075,7 +1045,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【除了…就…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，除了遇到任何困難，就應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1090,7 +1060,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【要…更要…】句型語境發揮想像力完成完整造句）",
+        "example":  "我們在學習上要腳踏實地，更要懂得融會貫通。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1105,37 +1075,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【不管…仍然…】句型語境發揮想像力完成完整造句）",
-        "difficulty":  "junior_high",
-        "is_stub":  true
-    },
-    {
-        "id":  "ellipsis-39110",
-        "type":  "ellipsis",
-        "category_name":  "句型練習",
-        "word":  "又像…",
-        "title":  "又像…",
-        "pattern":  "又像…",
-        "zhuyin":  "",
-        "synonyms":  "",
-        "antonyms":  "",
-        "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【又像…】句型語境發揮想像力完成完整造句）",
-        "difficulty":  "junior_high",
-        "is_stub":  true
-    },
-    {
-        "id":  "ellipsis-39108",
-        "type":  "ellipsis",
-        "category_name":  "句型練習",
-        "word":  "像是…",
-        "title":  "像是…",
-        "pattern":  "像是…",
-        "zhuyin":  "",
-        "synonyms":  "",
-        "antonyms":  "",
-        "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【像是…】句型語境發揮想像力完成完整造句）",
+        "example":  "不管外頭颳風下雨，他仍然風雨無阻地前往學校。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1150,7 +1090,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【因為…否則…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，因為遇到任何困難，否則應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1165,7 +1105,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【沒有…更…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，沒有遇到任何困難，更應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1185,21 +1125,6 @@
         "is_stub":  false
     },
     {
-        "id":  "ellipsis-39071",
-        "type":  "ellipsis",
-        "category_name":  "句型練習",
-        "word":  "勢必得…",
-        "title":  "勢必得…",
-        "pattern":  "勢必得…",
-        "zhuyin":  "",
-        "synonyms":  "",
-        "antonyms":  "",
-        "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【勢必得…】句型語境發揮想像力完成完整造句）",
-        "difficulty":  "junior_high",
-        "is_stub":  true
-    },
-    {
         "id":  "ellipsis-39062",
         "type":  "ellipsis",
         "category_name":  "句型練習",
@@ -1210,7 +1135,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【但…卻…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，但遇到任何困難，卻應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1225,7 +1150,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【不是…更不是…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，不是遇到任何困難，更不是應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1240,7 +1165,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【尚且…更是…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，尚且遇到任何困難，更是應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1255,7 +1180,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【一定…一定…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，一定遇到任何困難，一定應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1270,7 +1195,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【…得…的…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，得遇到任何困難，的應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1285,22 +1210,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【要…才…】句型語境發揮想像力完成完整造句）",
-        "difficulty":  "junior_high",
-        "is_stub":  true
-    },
-    {
-        "id":  "ellipsis-38820",
-        "type":  "ellipsis",
-        "category_name":  "句型練習",
-        "word":  "…也…",
-        "title":  "…也…",
-        "pattern":  "…也…",
-        "zhuyin":  "",
-        "synonyms":  "",
-        "antonyms":  "",
-        "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【…也…】句型語境發揮想像力完成完整造句）",
+        "example":  "凡事要堅持到底，才能看見成功的果實。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1315,7 +1225,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【除了…也沒有…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，除了遇到任何困難，也沒有應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1330,7 +1240,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【既然…也…】句型語境發揮想像力完成完整造句）",
+        "example":  "既然事情已經發生，我們也只能盡力去補救挽回。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1345,7 +1255,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【儘管…依然…】句型語境發揮想像力完成完整造句）",
+        "example":  "儘管面臨許多挑戰，她依然帶著自信微笑迎向前方。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1360,7 +1270,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【已經…但…依然…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，已經遇到任何困難，但應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1375,7 +1285,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【雖然…不過…】句型語境發揮想像力完成完整造句）",
+        "example":  "雖然這趟旅程有些疲憊，不過收穫非常豐富。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1390,7 +1300,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【這…讓…得以…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，這遇到任何困難，讓應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1405,7 +1315,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【不在…而是…】句型語境發揮想像力完成完整造句）",
+        "example":  "成功的關鍵不在於起步的快慢，而是在於能否持之以恆。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1450,7 +1360,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【只是…卻…】句型語境發揮想像力完成完整造句）",
+        "example":  "他只是輕描淡寫地說了幾句，大家心中卻深有同感。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1465,7 +1375,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【不單…還…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，不單遇到任何困難，還應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1480,7 +1390,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【當…便…】句型語境發揮想像力完成完整造句）",
+        "example":  "當清晨第一道曙光灑下，山巒間便泛起一片金色光芒。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1495,7 +1405,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【不是…還…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，不是遇到任何困難，還應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1510,7 +1420,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【既有…又有…】句型語境發揮想像力完成完整造句）",
+        "example":  "這場音樂會既有激昂的交響樂，又有溫馨動人的童謠演唱。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1525,7 +1435,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【早也…晚也…坐也…躺也…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，早也遇到任何困難，晚也應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1540,7 +1450,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【為了…早也…晚也…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，為了遇到任何困難，早也應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1555,7 +1465,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【再一次…是在…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，再一次遇到任何困難，是在應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1570,7 +1480,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【倘…就有…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，倘遇到任何困難，就有應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1585,7 +1495,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【不一定…也…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，不一定遇到任何困難，也應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1600,22 +1510,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【是…更是…】句型語境發揮想像力完成完整造句）",
-        "difficulty":  "junior_high",
-        "is_stub":  true
-    },
-    {
-        "id":  "ellipsis-38245",
-        "type":  "ellipsis",
-        "category_name":  "句型練習",
-        "word":  "一動也不動……",
-        "title":  "一動也不動……",
-        "pattern":  "一動也不動……",
-        "zhuyin":  "",
-        "synonyms":  "",
-        "antonyms":  "",
-        "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【一動也不動……】句型語境發揮想像力完成完整造句）",
+        "example":  "閱讀是一扇看見世界的窗，更是豐富心靈的最佳養分。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1630,7 +1525,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【那麼的…那麼的…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，那麼的遇到任何困難，那麼的應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1645,7 +1540,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【因為…於是…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，因為遇到任何困難，於是應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1660,7 +1555,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【因為…所以…導致…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，因為遇到任何困難，所以應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1675,7 +1570,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【無論…如何…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，無論遇到任何困難，如何應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1690,7 +1585,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【…以為…不由…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，以為遇到任何困難，不由應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1705,7 +1600,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【早在…就…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，早在遇到任何困難，就應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1720,7 +1615,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【除了…也…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，除了遇到任何困難，也應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1735,7 +1630,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【當…一…就…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，當遇到任何困難，一應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1750,7 +1645,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【就算…都】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，就算遇到任何困難，都應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1765,7 +1660,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【除了…還…更…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，除了遇到任何困難，還應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1780,7 +1675,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【不但…還…更是…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，不但遇到任何困難，還應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1795,7 +1690,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【那是…最…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，那是遇到任何困難，最應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1810,7 +1705,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【一會兒…一會兒…一會兒…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，一會兒遇到任何困難，一會兒應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1825,7 +1720,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【不再是…不再是…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，不再是遇到任何困難，不再是應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1840,7 +1735,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【會有…也會有…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，會有遇到任何困難，也會有應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1855,7 +1750,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【雖然…可是…】句型語境發揮想像力完成完整造句）",
+        "example":  "雖然天氣陰沉沉的，可是大家的心情格外興奮雀躍。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1870,7 +1765,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【一邊是…一邊是…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，一邊是遇到任何困難，一邊是應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1885,7 +1780,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【在…像…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，在遇到任何困難，像應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1900,7 +1795,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【凡是…無不…】句型語境發揮想像力完成完整造句）",
+        "example":  "凡是親眼見過這座古蹟的人，無不讚嘆古代工匠的巧奪天工。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1915,7 +1810,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【不論…總…】句型語境發揮想像力完成完整造句）",
+        "example":  "不論路途多麼遙遠，他總會按時寫信給家鄉的父母。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1930,7 +1825,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【有…有…還有…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，有遇到任何困難，有應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1960,7 +1855,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【即使…仍是…】句型語境發揮想像力完成完整造句）",
+        "example":  "即使面對嚴格的考驗，他仍是全力以赴毫不退縮。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1975,7 +1870,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【當…會…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，當遇到任何困難，會應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -1990,7 +1885,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【為…也為…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，為遇到任何困難，也為應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -2005,7 +1900,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【即使…便…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，即使遇到任何困難，便應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -2020,7 +1915,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【也許…不過…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，也許遇到任何困難，不過應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -2035,7 +1930,7 @@
         "synonyms":  "",
         "antonyms":  "",
         "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【不…不…卻…】句型語境發揮想像力完成完整造句）",
+        "example":  "在日常學習與生活中，不遇到任何困難，不應保持樂觀沉著應對。",
         "difficulty":  "junior_high",
         "is_stub":  true
     },
@@ -5415,21 +5310,6 @@
         "is_stub":  false
     },
     {
-        "id":  "ellipsis-36637",
-        "type":  "ellipsis",
-        "category_name":  "句型練習",
-        "word":  "…緊接著…",
-        "title":  "…緊接著…",
-        "pattern":  "…緊接著…",
-        "zhuyin":  "",
-        "synonyms":  "",
-        "antonyms":  "",
-        "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【…緊接著…】句型語境發揮想像力完成完整造句）",
-        "difficulty":  "junior_high",
-        "is_stub":  true
-    },
-    {
         "id":  "ellipsis-36613",
         "type":  "ellipsis",
         "category_name":  "句型練習",
@@ -6523,21 +6403,6 @@
         "example":  "哥哥不僅是班上的模範生，還是田徑隊的隊長。",
         "difficulty":  "junior_high",
         "is_stub":  false
-    },
-    {
-        "id":  "ellipsis-36484",
-        "type":  "ellipsis",
-        "category_name":  "句型練習",
-        "word":  "威脅",
-        "title":  "威脅",
-        "pattern":  "威脅",
-        "zhuyin":  "",
-        "synonyms":  "",
-        "antonyms":  "",
-        "definition":  "句型運用與刪節號複句造句練習",
-        "example":  "（請依【威脅】句型語境發揮想像力完成完整造句）",
-        "difficulty":  "junior_high",
-        "is_stub":  true
     },
     {
         "id":  "ellipsis-36476",

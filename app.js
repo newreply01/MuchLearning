@@ -538,7 +538,14 @@
       idiom: rawBank.filter(i => i.type === 'idiom'),
       vocabulary: rawBank.filter(i => i.type === 'vocabulary'),
       sentence: rawBank.filter(i => i.type === 'sentence'),
-      ellipsis: rawBank.filter(i => i.type === 'ellipsis'),
+      ellipsis: rawBank.filter(i => {
+        if (i.type !== 'ellipsis') return false;
+        if (!i.pattern || !i.pattern.includes('…')) return false;
+        if (!i.example || i.example.length < 10) return false;
+        if (i.example.includes('發揮想像力') || i.example.includes('請依') || i.example.includes('完成完整造句')) return false;
+        if (i.example.startsWith('(') || i.example.startsWith('（')) return false;
+        return true;
+      }),
       withSynonyms: rawBank.filter(i => i.synonyms && i.synonyms.trim().length > 0),
       withZhuyin: rawBank.filter(i => i.zhuyin && i.zhuyin.trim().length > 0),
       idiomLow: [],
