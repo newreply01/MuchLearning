@@ -542,28 +542,75 @@ function buildSynonymQuestion(item, rawBank, bankByType) {
   };
 }
 
+const CONJUNCTION_SENTENCE_PRESETS = {
+  '不但…而且…': '這本書【　　】內容豐富，【　　】插圖生動，深受同學們喜愛。',
+  '雖然…但是…': '哥哥【　　】遇到了很多困難，【　　】他從不輕易放棄努力。',
+  '如果…就…': '明天【　　】下雨，運動會【　　】改在室內體育館舉行。',
+  '因為…所以…': '【　　】平時認真複習功課，【　　】他在考試中取得了優異的成績。',
+  '無論…都…': '【　　】天氣多麼惡劣，郵差先生【　　】會準時把信件送到每家每戶。',
+  '與其…不如…': '【　　】在原地嘆氣埋怨，【　　】挽起袖子立即行動。',
+  '只有…才…': '【　　】持之以恆地練習，【　　】能彈奏出美妙動聽的樂曲。',
+  '一方面…另一方面…': '他【　　】積極準備課堂測驗，【　　】抽空參與校園志工服務。',
+  '不僅…還…': '這次戶外教學【　　】讓我們學到了自然知識，【　　】增進了彼此的友誼。',
+  '只要…就…': '【　　】大家齊心協力，我們【　　】一定能克服眼前的難關。',
+  '既然…就…': '你【　　】已經答應了別人，【　　】應該信守承諾全力以赴。',
+  '儘管…還是…': '【　　】路途遙遠顛簸，大家【　　】滿懷熱情地準時到達目的地。',
+  '除了…還…': '圖書館裡【　　】有豐富的中文書籍，【　　】收藏了各國精采的繪本。',
+  '既…又…': '這間教室【　　】寬敞，【　　】明亮，是大家最喜歡的閱讀空間。',
+  '一邊…一邊…': '小妹妹【　　】哼著歡快的兒歌，【　　】開心地整理自己的書包。',
+  '有的…有的…': '操場上的同學【　　】在打籃球，【　　】在慢跑，充滿了活力。',
+  '寧可…也不…': '他【　　】自己多花時間反覆檢查，【　　】願交出草率粗心的作業。',
+  '與其…寧可…': '他【　　】自己多承擔一些工作，【　　】不願讓組員感到負擔太重。',
+  '凡是…都…': '【　　】遇到不熟悉的題目，哥哥【　　】會主動向老師與同學請教。',
+  '有了…才能…': '【　　】正確的心態以後，對待各種人事物【　　】更客觀、理性。',
+  '只要…都可以…': '【　　】購買週年慶活動商品，【　　】參加摸彩活動。'
+};
+
+function escapeRegExp(string) {
+  return (string || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function buildSituationalQuestion(item, bankByType) {
-  let idiomItem = (item && item.type === 'idiom') ? item : getRandomSample(bankByType.idiom, 1)[0];
+  const idiomBank = (bankByType && bankByType.idiom && bankByType.idiom.length) ? bankByType.idiom : [];
+  let idiomItem = (item && item.type === 'idiom') ? item : getRandomSample(idiomBank, 1)[0];
   if (!idiomItem) return null;
+
+  const isIdiom = (idiomItem.type === 'idiom' || idiomItem.word.length === 4);
+  const termLabel = isIdiom ? '成語' : '詞語';
 
   const { cleanExample, cleanDef } = sanitizeItemForQuestion(idiomItem);
   let scenario = '';
 
   if (cleanExample && cleanExample.includes(idiomItem.word)) {
-    const maskedEx = cleanExample.replace(new RegExp(idiomItem.word, 'g'), '【　　　　】');
-    scenario = `面對「${maskedEx}」這樣的生活情境，空格中最適合填入下列哪一個成語？`;
+    // 必須將目標詞嚴格全域挖空為【　　　　】，絕不能把原詞留在情境中！
+    const maskedEx = cleanExample.replace(new RegExp(escapeRegExp(idiomItem.word), 'g'), '【　　　　】');
+    const templates = [
+      `在「${maskedEx}」的文意情境中，空格處應填入哪一個${termLabel}最恰當？`,
+      `閱讀下列文句：「${maskedEx}」，空格中最適合填入的${termLabel}是：`,
+      `下列文句空格處，填入哪一個${termLabel}最切合文意？<br>「${maskedEx}」`,
+      `面對「${maskedEx}」的語境，空格中最適合填入下列何者？`
+    ];
+    scenario = templates[Math.floor(Math.random() * templates.length)];
   } else if (cleanDef) {
-    scenario = `如果有人想表達「${cleanDef}」的意思，最恰當的成語是：`;
+    const templates = [
+      `下列選項中，意思為「${cleanDef}」的${termLabel}是：`,
+      `若想形容「${cleanDef}」的情況，最恰當的${termLabel}是：`,
+      `「${cleanDef}」最適合用下列哪一個${termLabel}來概括？`,
+      `下列哪一個${termLabel}的意思是「${cleanDef}」？`
+    ];
+    scenario = templates[Math.floor(Math.random() * templates.length)];
   } else {
-    scenario = `下列文句或情境中，最適當填入的成語是【　　　　】。`;
+    scenario = `下列選項中，最適當填入空格的${termLabel}是【　　　　】。`;
   }
 
-  const distractors = getRandomSample(bankByType.idiom.filter(i => i.word !== idiomItem.word), 3).map(i => i.word);
+  const distractorPool = isIdiom ? idiomBank : (bankByType && bankByType.rawBank ? bankByType.rawBank : idiomBank);
+  const distractors = getRandomSample(distractorPool.filter(i => i.word !== idiomItem.word), 3).map(i => i.word);
   const options = shuffleArray([idiomItem.word, ...distractors]);
 
   return {
     ...idiomItem,
     quizType: 'situational',
+    subCategory: isIdiom ? '【生活語境成語應用】' : '【生活語境詞彙理解】',
     promptSentence: scenario,
     options,
     correctAnswer: idiomItem.word
@@ -572,19 +619,33 @@ function buildSituationalQuestion(item, bankByType) {
 
 function buildConjunctionQuestion(item, bankByType) {
   let ellItem = (item && item.type === 'ellipsis') ? item : getRandomSample(bankByType.ellipsis, 1)[0];
-  if (!ellItem || !ellItem.pattern || !ellItem.example) return null;
+  if (!ellItem || !ellItem.pattern) return null;
 
-  const markers = ellItem.pattern.split(/[…\.⋯]+/).map(m => m.trim()).filter(m => m.length > 0);
-  if (markers.length === 0) return null;
+  let masked = '';
+  // 若原例句為高品質真實現成例句且不包含佔位符，優先遮罩
+  if (ellItem.example && !ellItem.example.includes('發揮想像力') && !ellItem.example.includes('完成完整造句') && !ellItem.example.startsWith('(') && !ellItem.example.startsWith('（')) {
+    const markers = ellItem.pattern.split(/[…\.⋯]+/).map(m => m.trim()).filter(m => m.length > 0);
+    masked = ellItem.example;
+    markers.forEach(m => {
+      if (masked.includes(m)) {
+        masked = masked.replace(new RegExp(escapeRegExp(m), 'g'), '【　　】');
+      }
+    });
+  }
 
-  let masked = ellItem.example;
-  markers.forEach(m => {
-    if (masked.includes(m)) {
-      masked = masked.replace(m, '【　　】');
+  // 若原例句無效或未成功遮罩，使用優質精選真實語境句庫
+  if (!masked || !masked.includes('【　　】')) {
+    if (CONJUNCTION_SENTENCE_PRESETS[ellItem.pattern]) {
+      masked = CONJUNCTION_SENTENCE_PRESETS[ellItem.pattern];
+    } else {
+      const candidates = Object.keys(CONJUNCTION_SENTENCE_PRESETS);
+      const randomPattern = candidates[Math.floor(Math.random() * candidates.length)];
+      ellItem = { ...ellItem, pattern: randomPattern };
+      masked = CONJUNCTION_SENTENCE_PRESETS[randomPattern];
     }
-  });
+  }
 
-  const candidateConjs = ['不僅…而且…', '雖然…但是…', '如果…就…', '因為…所以…', '無論…都…', '與其…不如…', '只有…才…', '一方面…另一方面…'];
+  const candidateConjs = ['不僅…而且…', '雖然…但是…', '如果…就…', '因為…所以…', '無論…都…', '與其…不如…', '只有…才…', '一方面…另一方面…', '只要…就…', '凡是…都…'];
   const distractors = getRandomSample(candidateConjs.filter(c => c !== ellItem.pattern), 3);
   const options = shuffleArray([ellItem.pattern, ...distractors]);
 
